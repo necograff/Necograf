@@ -1,0 +1,565 @@
+<!doctype html>
+<html lang="es">
+<head>
+<link rel="manifest" href="manifest.webmanifest">
+<meta name="theme-color" content="#0ea5e9">
+<meta name="mobile-web-app-capable" content="yes">
+<meta name="apple-mobile-web-app-capable" content="yes">
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width,initial-scale=1">
+<title>Control de Negocio</title>
+<style>
+:root{
+ --bg:#f4f7fb;--card:#fff;--text:#172033;--muted:#667085;--line:#e4e7ec;
+ --blue:#2563eb;--blue2:#1d4ed8;--green:#16a34a;--red:#dc2626;--orange:#ea580c;
+ --purple:#7c3aed;--shadow:0 5px 20px rgba(16,24,40,.07)
+}
+*{box-sizing:border-box}html,body{margin:0;background:var(--bg);color:var(--text);font-family:Inter,system-ui,-apple-system,BlinkMacSystemFont,"Segoe UI",sans-serif}
+button,input,select,textarea{font:inherit}button{cursor:pointer}
+.top{background:#111827;color:#fff;padding:17px 20px;display:flex;align-items:flex-start;justify-content:space-between;gap:15px}.header-right{display:flex;flex-direction:column;align-items:flex-end;gap:8px;min-width:min(430px,52vw)}
+.brand{display:flex;align-items:center;gap:12px}.brand img{width:42px;height:42px;object-fit:contain;border-radius:9px;background:#fff}.brand h1{margin:0;font-size:20px}.brand small{color:#cbd5e1}
+nav{background:#fff;border-bottom:1px solid var(--line);display:flex;gap:7px;padding:10px 14px;overflow:auto;position:sticky;top:0;z-index:20}
+nav button{border:0;background:#f1f5f9;color:#334155;padding:11px 14px;border-radius:10px;font-weight:700;white-space:nowrap}
+nav button.active{background:var(--blue);color:#fff}
+main{max-width:1200px;margin:auto;padding:18px}.page{display:none}.page.active{display:block}
+.card{background:var(--card);border:1px solid var(--line);border-radius:16px;padding:18px;margin-bottom:16px;box-shadow:var(--shadow)}
+h2{font-size:19px;margin:0 0 15px}h3{font-size:16px;margin:0 0 12px}.muted{color:var(--muted);font-size:13px}
+.grid{display:grid;grid-template-columns:repeat(2,minmax(0,1fr));gap:13px}.grid3{display:grid;grid-template-columns:repeat(3,minmax(0,1fr));gap:13px}
+label{display:block;font-weight:700;font-size:13px;margin:0 0 6px}
+input,select,textarea{width:100%;border:1px solid #cfd6df;border-radius:10px;background:#fff;padding:11px 12px;outline:none}
+input:focus,select:focus,textarea:focus{border-color:var(--blue);box-shadow:0 0 0 3px #2563eb18}
+input[type=file]{padding:8px}textarea{min-height:90px;resize:vertical}
+.money-input{text-align:right;font-variant-numeric:tabular-nums}
+.actions{display:flex;gap:9px;flex-wrap:wrap;margin-top:14px}
+.btn{border:0;border-radius:10px;padding:11px 15px;font-weight:800}.primary{background:var(--blue);color:#fff}.secondary{background:#e9eef5;color:#1f2937}.success{background:var(--green);color:#fff}.danger{background:var(--red);color:#fff}.warning{background:var(--orange);color:#fff}.purple{background:var(--purple);color:#fff}
+.stats{display:grid;grid-template-columns:repeat(3,1fr);gap:12px}.stat{border:1px solid var(--line);border-radius:13px;padding:15px;background:#fafbfc}.stat .label{font-size:13px;color:var(--muted)}.stat strong{display:block;font-size:23px;margin-top:5px}
+.today-list{display:grid;gap:8px}.today-item{display:flex;justify-content:space-between;align-items:center;border:1px solid var(--line);padding:11px 12px;border-radius:10px}.today-item .name{font-weight:700}.today-item small{display:block;color:var(--muted)}
+.badge{display:inline-flex;align-items:center;gap:5px;padding:5px 9px;border-radius:99px;font-size:12px;font-weight:800}.b-sale{background:#dcfce7;color:#166534}.b-exp{background:#fee2e2;color:#991b1b}.b-inv{background:#ffedd5;color:#9a3412}.b-doc{background:#ede9fe;color:#5b21b6}
+.table-wrap{overflow:auto}.table{width:100%;border-collapse:collapse;min-width:720px}.table th,.table td{border-bottom:1px solid var(--line);padding:10px;text-align:left;font-size:13px;vertical-align:middle}.table th{background:#f8fafc}.right{text-align:right!important}
+.product-grid{display:grid;grid-template-columns:repeat(auto-fill,minmax(230px,1fr));gap:14px}.product-card{border:1px solid var(--line);border-radius:15px;overflow:hidden;background:#fff}.product-photo{width:100%;height:175px;object-fit:cover;background:#eef2f6;display:block}.product-body{padding:13px}.product-body h3{margin-bottom:7px}.product-meta{display:grid;grid-template-columns:1fr 1fr;gap:7px;font-size:13px}.meta-box{background:#f8fafc;border-radius:8px;padding:8px}.meta-box b{display:block;margin-top:2px}
+.preview{width:170px;height:140px;object-fit:contain;border:1px dashed #aab4c2;border-radius:10px;background:#f8fafc;display:block}.logo-preview{width:110px;height:80px;object-fit:contain;border:1px dashed #aab4c2;border-radius:10px;background:#f8fafc}
+.doc-row{display:grid;grid-template-columns:80px 1fr 150px 150px 45px;gap:8px;align-items:end;margin-bottom:8px}.doc-total{text-align:right;font-size:18px;font-weight:900} .inventory-stats .stat{min-height:112px}.inventory-stats .stat strong{font-variant-numeric:tabular-nums}.profit-positive{color:var(--green)!important}.profit-negative{color:var(--red)!important}.product-search-empty{grid-column:1/-1}.product-card .meta-box b{font-variant-numeric:tabular-nums}
+.modal{position:fixed;inset:0;background:#11182788;display:none;align-items:center;justify-content:center;padding:15px;z-index:50}.modal.open{display:flex}.modal-box{background:#fff;width:min(900px,100%);max-height:94vh;overflow:auto;border-radius:16px;padding:20px}
+.invoice-paper{background:#fff;border:1px solid #ddd;padding:28px;max-width:800px;margin:auto;color:#111}.invoice-head{display:flex;justify-content:space-between;gap:20px;border-bottom:2px solid #111;padding-bottom:15px}.invoice-logo{max-width:130px;max-height:80px;object-fit:contain}.invoice-table{width:100%;border-collapse:collapse;margin-top:22px}.invoice-table th,.invoice-table td{border:1px solid #ccc;padding:8px}.invoice-total{text-align:right;margin-top:15px;font-size:20px;font-weight:900}.status{padding:9px 11px;border-radius:9px;background:#eff6ff;color:#1d4ed8;font-size:13px}.empty{padding:30px;text-align:center;color:var(--muted)}.doc-source{padding:10px 12px;border-radius:10px;background:#eef6ff;color:#1e40af;font-size:13px;margin:10px 0}.doc-preview-wrap{margin-top:20px;padding-top:20px;border-top:1px solid var(--line)}.invoice-paper{box-sizing:border-box}.doc-work-actions{display:flex;gap:9px;flex-wrap:wrap;margin-top:16px}.note-summary{display:grid;grid-template-columns:repeat(3,1fr);gap:12px}.note-summary .stat{min-height:105px}.note-debt{color:var(--red)!important}.note-receivable{color:var(--green)!important}.inventory-picker{position:relative}.inventory-suggestions{position:absolute;left:0;right:0;top:100%;z-index:50;background:#fff;border:1px solid #cbd5e1;border-radius:10px;box-shadow:0 10px 25px rgba(15,23,42,.14);margin-top:5px;max-height:260px;overflow:auto;display:none}.inventory-suggestions.open{display:block}.inventory-suggestion{display:flex;justify-content:space-between;gap:12px;align-items:center;width:100%;border:0;background:#fff;padding:11px 12px;text-align:left;cursor:pointer;font:inherit;color:#172033}.inventory-suggestion:hover,.inventory-suggestion:focus{background:#eff6ff;outline:none}.inventory-suggestion .inv-name{font-weight:700}.inventory-suggestion .inv-stock{font-size:12px;color:#64748b;white-space:nowrap}.inventory-empty{padding:12px;color:#64748b;font-size:13px}.note-filters{display:grid;grid-template-columns:1fr 1fr 1fr;gap:12px}.reminder-settings{margin-top:14px;padding:14px;border:1px solid #bfdbfe;border-radius:12px;background:#eff6ff}.reminder-days{display:flex;gap:7px;flex-wrap:wrap;margin-top:7px}.reminder-day{border:1px solid #cbd5e1;background:#fff;color:#334155;border-radius:8px;padding:7px 9px;font-size:12px;font-weight:800}.reminder-day input{display:none}.reminder-day:has(input:checked){background:#2563eb;color:#fff;border-color:#2563eb}.reminder-help{font-size:12px;color:#64748b;margin-top:6px}.reminder-area{display:none;width:min(430px,92vw)}.reminder-area.open{display:block}.reminder-alert{background:#fff7ed;border:2px solid #f97316;color:#7c2d12;border-radius:13px;padding:12px 13px;box-shadow:0 10px 30px rgba(15,23,42,.25)}.reminder-alert h3{margin:0 0 5px;color:#c2410c;font-size:14px}.reminder-alert .reminder-row{display:flex;justify-content:space-between;gap:10px;align-items:flex-start}.reminder-alert .reminder-actions{display:flex;gap:7px;flex-wrap:wrap;margin-top:10px}.reminder-alert .reminder-actions button{border:0;border-radius:8px;padding:8px 10px;font-weight:800;cursor:pointer}.reminder-complete{background:#16a34a;color:#fff}.reminder-open-note{background:#e2e8f0;color:#1e293b}@media(max-width:760px){.header-right{min-width:0;width:100%;align-items:stretch}.top{align-items:stretch;flex-direction:column}.reminder-area{width:100%}}@media(max-width:760px){.note-summary,.note-filters{grid-template-columns:1fr}}
+@media(max-width:760px){main{padding:10px}.grid,.grid3,.stats{grid-template-columns:1fr}.top{padding:13px}.doc-row{grid-template-columns:70px 1fr 1fr 1fr 40px}.product-grid{grid-template-columns:repeat(auto-fill,minmax(190px,1fr))}.product-photo{height:150px}.inventory-stats{grid-template-columns:1fr}.inventory-stats .stat{min-height:auto}}
+@media print{body{background:#fff}.top,nav,main,.no-print{display:none!important}.modal{position:static!important;display:block!important;background:#fff!important;padding:0!important}.modal-box{width:100%!important;max-height:none!important;overflow:visible!important;padding:0!important;border-radius:0!important;box-shadow:none!important}.invoice-paper{border:0!important;max-width:none!important;margin:0!important}.doc-row{display:none!important}}
+</style>
+</head>
+<body>
+<header class="top">
+ <div class="brand"><img id="headerLogo" alt="Logo" hidden><div><h1 id="appName">Control de Negocio</h1><small id="saveState">Guardado local automático</small></div></div>
+ <div class="header-right"><div class="status" id="fileState">Solo navegador</div><div id="reminderArea" class="reminder-area" aria-live="assertive"></div></div>
+</header>
+<nav id="nav">
+<button data-page="ventas">💰 Ventas</button><button data-page="gastos">💸 Gastos</button><button data-page="movimientos">📋 Movimientos</button><button data-page="inventario">📦 Inventario</button><button data-page="notas">📝 Notas</button><button data-page="documentos">🧾 Facturas / Cotizaciones</button><button data-page="config">⚙️ Configuración</button>
+</nav>
+<main>
+
+<section id="ventas" class="page active">
+<div class="card"><h2 id="ventaTitle">➕ Registrar venta</h2>
+<form id="ventaForm"><input type="hidden" id="ventaId">
+<div class="grid3">
+<div><label>Nombre de la venta / producto</label><input id="ventaProducto" placeholder="Ej. Vaso personalizado" required></div>
+<div><label>Valor total</label><input id="ventaValor" class="money-input" inputmode="numeric" placeholder="0" required></div>
+<div><label>Fecha</label><input id="ventaFecha" type="date" required></div>
+</div>
+<div class="grid3" style="margin-top:13px">
+<div><label>Cantidad</label><input id="ventaCantidad" type="number" min="1" step="1" value="1"></div>
+<div class="inventory-picker"><label>Producto del inventario</label><input id="ventaInventarioSearch" autocomplete="off" placeholder="🔎 Buscar producto por nombre"><div id="ventaInventorySuggestions" class="inventory-suggestions" role="listbox"></div><select id="ventaInventario" hidden><option value="">No descontar inventario</option></select><small id="ventaInventarioHint" class="muted">Escribe el nombre para ver productos relacionados y selecciona uno.</small></div>
+<div><label>Cliente / nota</label><input id="ventaNota" placeholder="Información adicional"></div>
+</div>
+<div class="actions"><button class="btn primary">💾 Guardar venta</button><button class="btn secondary" type="button" id="ventaCancel" hidden>Cancelar edición</button></div>
+</form></div>
+<div class="card"><h2>🟢 Ventas de hoy <span class="muted" id="todayDate"></span></h2><div class="stats"><div class="stat"><span class="label">Ventas</span><strong id="todaySalesTotal">$0</strong></div><div class="stat"><span class="label">Cantidad de ventas</span><strong id="todaySalesCount">0</strong></div><div class="stat"><span class="label">Promedio</span><strong id="todaySalesAvg">$0</strong></div></div><div id="todaySales" class="today-list" style="margin-top:12px"></div></div>
+</section>
+
+<section id="gastos" class="page">
+<div class="card"><h2 id="gastoTitle">➕ Registrar gasto</h2>
+<form id="gastoForm"><input type="hidden" id="gastoId"><div class="grid">
+<div><label>Nombre del gasto / concepto</label><input id="gastoProducto" placeholder="Ej. Compra de materiales" required></div>
+<div><label>Valor del gasto</label><input id="gastoValor" class="money-input" inputmode="numeric" placeholder="0" required></div>
+<div><label>Fecha</label><input id="gastoFecha" type="date" required></div>
+<div><label>Nota</label><input id="gastoNota" placeholder="Información adicional"></div>
+</div><div class="actions"><button class="btn primary">💾 Guardar gasto</button><button class="btn secondary" type="button" id="gastoCancel" hidden>Cancelar edición</button></div></form></div>
+<div class="card"><h2>🔴 Gastos de hoy <span class="muted" id="todayDate2"></span></h2><div class="stats"><div class="stat"><span class="label">Gastos</span><strong id="todayExpTotal">$0</strong></div><div class="stat"><span class="label">Cantidad</span><strong id="todayExpCount">0</strong></div><div class="stat"><span class="label">Promedio</span><strong id="todayExpAvg">$0</strong></div></div><div id="todayExpenses" class="today-list" style="margin-top:12px"></div></div>
+</section>
+
+<section id="movimientos" class="page">
+<div class="card"><h2>📋 Todos los movimientos</h2><div class="grid3">
+<div><label>Tipo</label><select id="mTipo"><option value="">Todos</option><option value="venta">🟢 Ventas</option><option value="gasto">🔴 Gastos</option><option value="inventario">🟠 Inventario</option><option value="documento">🟣 Documentos</option></select></div>
+<div><label>Año</label><select id="mYear"><option value="">Todos</option></select></div><div><label>Mes</label><select id="mMonth"><option value="">Todos</option><option value="01">Enero</option><option value="02">Febrero</option><option value="03">Marzo</option><option value="04">Abril</option><option value="05">Mayo</option><option value="06">Junio</option><option value="07">Julio</option><option value="08">Agosto</option><option value="09">Septiembre</option><option value="10">Octubre</option><option value="11">Noviembre</option><option value="12">Diciembre</option></select></div>
+<div><label>Día</label><input id="mDay" type="date"></div><div><label>Buscar palabra</label><input id="mSearch" placeholder="Producto, concepto, cliente..."></div></div><div class="actions"><button class="btn secondary" type="button" id="mClear">🧹 Limpiar filtros</button></div></div>
+<div class="card"><div class="stats"><div class="stat"><span class="label">Ventas filtradas</span><strong id="mSales">$0</strong></div><div class="stat"><span class="label">Gastos filtrados</span><strong id="mExpenses">$0</strong></div><div class="stat"><span class="label">Balance</span><strong id="mBalance">$0</strong></div></div></div>
+<div class="card"><div class="table-wrap"><table class="table"><thead><tr><th>Fecha / hora</th><th>Tipo</th><th>Concepto</th><th class="right">Valor</th><th>Detalle</th><th>Acciones</th></tr></thead><tbody id="movementBody"></tbody></table></div></div>
+</section>
+
+<section id="inventario" class="page">
+<div class="card"><h2 id="invTitle">📦 Registrar producto</h2><form id="invForm"><input type="hidden" id="invId">
+<div class="grid">
+<div><label>Nombre del producto</label><input id="invProducto" required></div><div><label>Cantidad stock</label><input id="invStock" type="number" min="0" step="1" required></div>
+<div><label>Precio compra</label><input id="invCompra" class="money-input" inputmode="numeric" placeholder="0" required></div><div><label>Precio venta</label><input id="invVenta" class="money-input" inputmode="numeric" placeholder="0" required></div>
+<div><label>Foto del producto</label><input id="invFoto" type="file" accept="image/*"></div>
+<div><label>Vista previa</label><img id="photoPreview" class="preview" alt="Vista previa del producto"></div>
+</div><p id="photoInfo" class="muted"></p><div class="actions"><button class="btn primary">💾 Guardar producto</button><button class="btn secondary" type="button" id="invCancel" hidden>Cancelar edición</button></div></form></div>
+<div class="card"><h2>📊 Resumen del inventario</h2><div class="stats inventory-stats"><div class="stat"><span class="label">Inversión total en inventario</span><strong id="invInvestmentTotal">$0</strong><small class="muted">Stock × precio de compra</small></div><div class="stat"><span class="label">Ganancia potencial total</span><strong id="invProfitTotal">$0</strong><small class="muted">Si se vende todo el stock al precio de venta</small></div><div class="stat"><span class="label">Valor total de venta</span><strong id="invSalesValueTotal">$0</strong><small class="muted">Stock × precio de venta</small></div></div></div>
+<div class="card"><div style="display:flex;justify-content:space-between;align-items:end;gap:12px;flex-wrap:wrap"><div><h2 style="margin-bottom:4px">🛍️ Productos registrados</h2><p class="muted" style="margin:0">Busca rápidamente tus productos por nombre.</p></div><div style="display:flex;gap:8px;align-items:end;flex-wrap:wrap;min-width:min(100%,360px);flex:1"><div style="flex:1;min-width:220px"><label for="inventorySearch">Buscar producto</label><input id="inventorySearch" type="search" placeholder="🔎 Escribe el nombre del producto..."></div><button class="btn primary" type="button" id="shareInventoryBtn">🔗 Compartir inventario</button></div></div><div id="inventoryShareBox" class="card" style="display:none;margin-top:14px;background:var(--soft);border:1px solid var(--line)"><strong>🔗 Enlace público de tu inventario</strong><p class="muted" style="margin:6px 0 10px">Tus clientes verán todos los productos registrados, incluso los que tengan stock 0, con foto, nombre y precio de venta por unidad. Después de abrir el enlace una vez con internet, el catálogo podrá seguir viéndose sin conexión en ese dispositivo.</p><div style="display:flex;gap:8px;flex-wrap:wrap"><input id="inventoryShareLink" readonly style="flex:1;min-width:240px"><button class="btn secondary" type="button" id="copyInventoryLink">📋 Copiar enlace</button><button class="btn secondary" type="button" id="openInventoryLink">↗️ Abrir</button></div></div><div id="inventorySearchInfo" class="muted" style="margin:12px 0 0"></div><div id="productGrid" class="product-grid" style="margin-top:14px"></div></div>
+</section>
+
+<section id="notas" class="page">
+<div class="card"><h2>📝 Nueva nota</h2><p class="muted">Registra compromisos, deudas, cuentas por cobrar o cualquier anotación con su valor y fecha.</p>
+<form id="notaForm"><input type="hidden" id="notaId">
+<div class="grid3">
+<div><label>Tipo</label><select id="notaTipo"><option value="debo">🔴 Yo debo</option><option value="deben">🟢 Me deben</option><option value="nota">📝 Nota</option></select></div>
+<div><label>Persona / empresa</label><input id="notaPersona" placeholder="Ej. Juan Pérez"></div>
+<div><label>Fecha</label><input id="notaFecha" type="date" required></div>
+<div><label>Valor</label><input id="notaValor" class="money-input" inputmode="numeric" placeholder="0"></div>
+<div style="grid-column:span 2"><label>Nota / concepto</label><input id="notaTexto" placeholder="Ej. Recordar llamar al cliente" required></div>
+</div>
+<div id="reminderSettings" class="reminder-settings" hidden>
+  <label style="display:flex;align-items:center;gap:8px;cursor:pointer"><input id="notaRecordatorio" type="checkbox" style="width:auto"> 🔔 Activar recordatorio para esta nota</label>
+  <div id="reminderOptions" hidden style="margin-top:12px">
+    <div class="grid3">
+      <div><label>Repetición</label><select id="reminderFrequency"><option value="once">Una vez</option><option value="daily">Diario</option><option value="weekly">Semanal</option><option value="monthly">Mensual</option></select></div>
+      <div id="reminderDateWrap"><label>Fecha</label><input id="reminderDate" type="date"></div>
+      <div id="reminderTimeWrap"><label>Hora</label><input id="reminderTime" type="time" value="09:00"></div>
+    </div>
+    <div id="weeklyDaysWrap" hidden style="margin-top:12px"><label>Días de la semana</label><div class="reminder-days">
+      <label class="reminder-day"><input type="checkbox" class="reminder-weekday" value="1">Lun</label>
+      <label class="reminder-day"><input type="checkbox" class="reminder-weekday" value="2">Mar</label>
+      <label class="reminder-day"><input type="checkbox" class="reminder-weekday" value="3">Mié</label>
+      <label class="reminder-day"><input type="checkbox" class="reminder-weekday" value="4">Jue</label>
+      <label class="reminder-day"><input type="checkbox" class="reminder-weekday" value="5">Vie</label>
+      <label class="reminder-day"><input type="checkbox" class="reminder-weekday" value="6">Sáb</label>
+      <label class="reminder-day"><input type="checkbox" class="reminder-weekday" value="0">Dom</label>
+    </div></div>
+    <div id="monthlyDayWrap" hidden style="margin-top:12px"><label>Día del mes</label><input id="reminderMonthDay" type="number" min="1" max="31" value="1"><div class="reminder-help">Si un mes no tiene ese día, se usará el último día disponible.</div></div>
+    <div class="reminder-help">El aviso aparecerá arriba a la derecha cuando llegue la fecha y hora. Permanecerá visible hasta que marques el recordatorio como cumplido.</div>
+  </div>
+</div>
+<div class="actions"><button class="btn primary" type="submit">💾 Guardar nota</button><button class="btn secondary" type="button" id="notaCancel" hidden>Cancelar edición</button></div></form></div>
+<div class="card"><h2>📊 Resumen de notas</h2><div class="note-summary">
+<div class="stat"><span class="label">Total que debo</span><strong id="notesDebtTotal" class="note-debt">$0</strong></div>
+<div class="stat"><span class="label">Total que me deben</span><strong id="notesReceivableTotal" class="note-receivable">$0</strong></div>
+<div class="stat"><span class="label">Balance de notas</span><strong id="notesBalanceTotal">$0</strong></div>
+</div></div>
+<div class="card"><div style="display:flex;justify-content:space-between;align-items:end;gap:12px;flex-wrap:wrap"><div><h2 style="margin-bottom:4px">📒 Notas registradas</h2><p class="muted" style="margin:0">Puedes editar o eliminar cualquier nota.</p></div><div style="min-width:min(100%,360px);flex:1"><label for="notesSearch">Buscar nota</label><input id="notesSearch" type="search" placeholder="🔎 Persona, concepto..." ></div></div>
+<div class="table-wrap" style="margin-top:14px"><table class="table"><thead><tr><th>Fecha</th><th>Tipo</th><th>Persona / empresa</th><th>Nota / concepto</th><th class="right">Valor</th><th>Acciones</th></tr></thead><tbody id="notesBody"></tbody></table></div></div>
+</section>
+
+<section id="documentos" class="page">
+<div class="card"><h2>🧾 Facturas y cotizaciones</h2><p class="muted">Crea documentos con tu información comercial, logo y productos. Puedes agregar tantos productos como necesites.</p>
+<div class="actions"><button class="btn primary" id="newInvoice" type="button">🧾 Nueva factura</button><button class="btn purple" id="newQuote" type="button">📄 Nueva cotización</button></div></div>
+<div class="card" id="docWorkspace" style="display:none"><div class="page-head" style="margin-bottom:10px"><div><h2 id="docWorkspaceTitle">🧾 Nueva factura</h2><p id="docWorkspaceHint" class="muted">Completa los datos de la persona o empresa a quien va dirigida y luego guarda o imprime el documento.</p></div><button class="btn secondary" type="button" id="closeWorkspace">✕ Cerrar</button></div><div id="docWorkspaceBody"></div></div>
+<div class="card"><h2>Documentos registrados</h2><div class="table-wrap"><table class="table"><thead><tr><th>N.º</th><th>Fecha</th><th>Tipo</th><th>Razón social</th><th>Total</th><th>Acciones</th></tr></thead><tbody id="docsBody"></tbody></table></div></div>
+</section>
+
+<section id="config" class="page">
+<div class="card"><h2>⚙️ Identidad y contacto</h2><div class="grid">
+<div><label>Nombre del negocio</label><input id="cfgName" placeholder="Mi negocio"></div><div><label>Logo</label><input id="cfgLogo" type="file" accept="image/*"></div>
+<div><label>Teléfono / WhatsApp</label><input id="cfgPhone" placeholder="313 741 4288"></div><div><label>Instagram</label><input id="cfgInstagram" placeholder="@usuario"></div>
+<div><label>Facebook</label><input id="cfgFacebook" placeholder="@usuario"></div><div><label>Correo electrónico</label><input id="cfgEmail" type="email"></div>
+<div><label>Dirección</label><input id="cfgAddress"></div><div><label>Ciudad</label><input id="cfgCity" placeholder="Medellín"></div>
+</div><div style="margin-top:12px"><img id="logoPreview" class="logo-preview" alt="Vista previa del logo"></div><div class="actions"><button class="btn primary" id="saveConfig" type="button">💾 Guardar identidad</button></div></div>
+<div class="card"><h2>💾 Archivo de datos</h2><p class="muted">La información se guarda automáticamente en el navegador y, si conectas un archivo local, también se escribe en ese archivo después de cada cambio.</p><div class="actions"><button class="btn primary" id="connectFile" type="button">📁 Conectar / crear archivo</button><button class="btn secondary" id="saveFileNow" type="button">💾 Guardar archivo ahora</button><button class="btn secondary" id="importFileBtn" type="button">⬆️ Importar archivo</button><input id="importFile" type="file" accept=".json" hidden></div><p id="fileHelp" class="muted"></p></div>
+<div class="card"><h2>🔗 Catálogo público offline</h2><p class="muted">Aquí va la dirección de la PWA del catálogo que se entrega junto con esta versión. Después de alojarla en HTTPS, pega aquí su dirección base. El enlace que compartirás con tus clientes funcionará sin internet después de abrirlo una vez conectado.</p><div><label>URL base del catálogo PWA</label><input id="cfgCatalogBaseUrl" placeholder="https://tuusuario.github.io/catalogo-negocio/" autocomplete="off"></div><p class="muted">No pongas aquí el token de Drive. El catálogo solo recibe una clave pública y consulta únicamente los productos.</p></div>
+<div class="card"><h2>☁️ Google Drive + Apps Script</h2><p class="muted">El guardado local sigue funcionando igual. Cada cambio se guarda primero en este dispositivo y luego se sincroniza con Google Drive. Al abrir el sistema en otro dispositivo, comprobará automáticamente si Drive tiene información más reciente. Si no hay internet, conserva los datos localmente y reintenta después.</p><div class="grid"><div><label>URL de la aplicación web de Apps Script</label><input id="cfgDriveUrl" placeholder="https://script.google.com/macros/s/…/exec" autocomplete="off"></div><div><label>Token secreto</label><input id="cfgDriveToken" type="password" placeholder="El mismo token del Apps Script" autocomplete="off"></div></div><div class="actions" style="margin-top:12px"><button class="btn primary" id="saveDriveConfig" type="button">☁️ Guardar conexión Drive</button><button class="btn secondary" id="syncDriveNow" type="button">🔄 Sincronizar ahora</button><button class="btn secondary" id="restoreDriveNow" type="button">⬇️ Restaurar desde Drive</button></div><p id="driveState" class="muted">No configurado</p><p class="muted">Importante: despliega Apps Script como aplicación web. El script puente se entrega junto con este archivo.</p></div>
+</section>
+</main>
+
+<div id="docModal" class="modal"><div class="modal-box">
+<div class="no-print" style="display:flex;justify-content:space-between;align-items:center;gap:10px"><h2 id="docModalTitle">Documento</h2><button class="btn secondary" type="button" id="closeDoc">✕</button></div>
+<form id="docForm" class="no-print"><input type="hidden" id="docId"><input type="hidden" id="docType">
+<div class="grid3"><div><label>Fecha</label><input id="docFecha" type="date" required></div><div><label>Razón social</label><input id="docRazon" required></div><div><label>NIT</label><input id="docNit"></div><div><label>Ciudad</label><input id="docCiudad"></div><div><label>Observaciones</label><input id="docObs"></div></div>
+<h3 style="margin-top:18px">Productos / servicios</h3><div id="docRows"></div>
+<button class="btn secondary" type="button" id="addDocRow">➕ Agregar producto</button>
+<div class="doc-total" style="margin-top:15px">Total a pagar: <span id="docTotal">$0</span></div>
+<div class="actions"><button class="btn primary">💾 Guardar documento</button><button class="btn secondary" type="button" id="printDoc">🖨️ Imprimir / Guardar PDF</button><button class="btn purple" type="button" id="downloadDoc">⬇️ Descargar PDF</button></div>
+</form>
+<div id="docPreview" class="invoice-paper" style="margin-top:20px;display:none"></div>
+</div></div>
+
+<script>
+const KEY='control_negocio_complete_v7';
+const IDB='control_negocio_file_db';
+let db={ventas:[],gastos:[],inventario:[],documentos:[],notas:[],config:{name:'Control de Negocio',logo:'',phone:'',instagram:'',facebook:'',email:'',address:'',city:'',driveScriptUrl:'',driveToken:''},_meta:{updatedAt:0}};
+let fileHandle=null, movementSeq=0;
+const $=id=>document.getElementById(id);
+const money=n=>'$ '+new Intl.NumberFormat('es-CO',{maximumFractionDigits:0}).format(Math.round(Number(n)||0));
+const numValue=v=>{let s=String(v??'').replace(/\./g,'').replace(/,/g,'').replace(/[^\d-]/g,'');let n=Number(s);return Number.isFinite(n)?n:0};
+function today(){let d=new Date();return `${d.getFullYear()}-${String(d.getMonth()+1).padStart(2,'0')}-${String(d.getDate()).padStart(2,'0')}`}
+function nowStamp(){return Date.now()}
+function fmtDate(s){if(!s)return '';let [y,m,d]=s.split('-');return `${d}/${m}/${y}`}
+function fmtDateTime(ts,date){if(ts){let d=new Date(ts);return `${fmtDate(date)} ${String(d.getHours()).padStart(2,'0')}:${String(d.getMinutes()).padStart(2,'0')}`}return fmtDate(date)}
+function formatInput(el){let n=numValue(el.value);el.value=n?new Intl.NumberFormat('es-CO').format(n):''}
+document.querySelectorAll('.money-input').forEach(el=>el.addEventListener('input',()=>{let pos=el.selectionStart;let raw=el.value;let digits=raw.replace(/\D/g,'');el.value=digits?new Intl.NumberFormat('es-CO').format(Number(digits)):''}));
+
+function normalize(x){x=x||{};x.ventas??=[];x.gastos??=[];x.inventario??=[];x.documentos??=[];x.notas??=[];x.notas=x.notas.map(n=>({...n,recordatorio:n.recordatorio||null}));x.config={...db.config,...(x.config||{})};x._meta={...(x._meta||{}),updatedAt:Number(x._meta?.updatedAt)||0};return x}
+let stateDb=null;
+function openStateDB(){return new Promise((resolve,reject)=>{if(stateDb)return resolve(stateDb);let r=indexedDB.open('control_negocio_state_v8',1);r.onupgradeneeded=()=>{if(!r.result.objectStoreNames.contains('state'))r.result.createObjectStore('state')};r.onsuccess=()=>{stateDb=r.result;resolve(stateDb)};r.onerror=()=>reject(r.error)})}
+async function persistBrowser(){try{let d=await openStateDB();await new Promise((res,rej)=>{let tx=d.transaction('state','readwrite');tx.objectStore('state').put(db,'data');tx.oncomplete=res;tx.onerror=()=>rej(tx.error)});$('saveState').textContent='✓ Guardado automáticamente · '+new Date().toLocaleTimeString('es-CO',{hour:'2-digit',minute:'2-digit'});return true}catch(e){try{localStorage.setItem(KEY,JSON.stringify(db));$('saveState').textContent='✓ Guardado local · '+new Date().toLocaleTimeString('es-CO',{hour:'2-digit',minute:'2-digit'});return true}catch(err){$('saveState').textContent='⚠️ No se pudo guardar';return false}}}
+async function loadBrowser(){try{let d=await openStateDB();let x=await new Promise((res,rej)=>{let q=d.transaction('state','readonly').objectStore('state').get('data');q.onsuccess=()=>res(q.result);q.onerror=()=>rej(q.error)});if(x){db=normalize(x);return}}catch(e){}try{let x=JSON.parse(localStorage.getItem(KEY));if(x)db=normalize(x)}catch(e){}}
+let driveSyncTimer=null,driveSyncBusy=false,driveSyncQueued=false,driveStartupChecked=false;
+function driveConfigured(){return !!(String(db.config.driveScriptUrl||'').trim()&&String(db.config.driveToken||'').trim())}
+function driveUrl(){return String(db.config.driveScriptUrl||'').trim().replace(/\/$/,'')}
+function setDriveState(text,cls=''){const el=$('driveState');if(el){el.textContent=text;el.className='muted '+cls}$('fileState').textContent=driveConfigured()?'☁️ Google Drive · '+text:'Solo navegador'}
+function ensureDriveMeta(){db._meta=db._meta||{};db._meta.driveSyncedAt=Number(db._meta.driveSyncedAt)||0;return db._meta}
+function jsonp(url,timeout=20000){return new Promise((resolve,reject)=>{const cb='driveCb_'+Date.now()+'_'+Math.random().toString(36).slice(2);let done=false;const script=document.createElement('script');const timer=setTimeout(()=>finish(new Error('Tiempo de espera agotado al consultar Apps Script')),timeout);function cleanup(){clearTimeout(timer);delete window[cb];script.remove()}function finish(err,data){if(done)return;done=true;cleanup();err?reject(err):resolve(data)}window[cb]=data=>finish(null,data);script.onerror=()=>finish(new Error('El navegador no pudo cargar la respuesta de Apps Script'));const sep=url.includes('?')?'&':'?';script.src=url+sep+'prefix='+encodeURIComponent(cb);document.head.appendChild(script)})}
+function postDriveForm(payload){return new Promise((resolve,reject)=>{try{let frame=document.getElementById('drivePostFrame');if(!frame){frame=document.createElement('iframe');frame.id='drivePostFrame';frame.name='drivePostFrame';frame.style.display='none';document.body.appendChild(frame)}const form=document.createElement('form');form.method='POST';form.action=driveUrl();form.target='drivePostFrame';form.style.display='none';const add=(name,value)=>{const input=document.createElement('input');input.type='hidden';input.name=name;input.value=value;form.appendChild(input)};add('action','save');add('token',payload.token);add('clientUpdatedAt',String(payload.clientUpdatedAt));add('data',JSON.stringify(payload.data));document.body.appendChild(form);form.submit();setTimeout(()=>{form.remove();resolve(true)},300)}catch(err){reject(err)}})}
+async function waitDriveStatus(expectedUpdatedAt,attempts=8){let lastError='No se pudo confirmar la actualización en Drive';for(let i=0;i<attempts;i++){try{const st=await jsonp(driveUrl()+'?action=status&token='+encodeURIComponent(db.config.driveToken));if(st&&st.ok){const remote=Number(st.updatedAt)||0;if(remote>=Number(expectedUpdatedAt)){return st}lastError='Drive respondió, pero todavía muestra una versión anterior de los datos'}else{lastError=(st&&st.error)||lastError}}catch(e){lastError=e&&e.message?e.message:lastError}await new Promise(r=>setTimeout(r,1000))}throw new Error(lastError)}
+async function saveDriveNow(show=true){
+  if(!driveConfigured())return false;
+  if(driveSyncBusy){driveSyncQueued=true;return false}
+  driveSyncBusy=true;
+  const clientUpdatedAt=Number(db._meta?.updatedAt)||Date.now();
+  const payload={action:'save',token:db.config.driveToken,data:db,clientUpdatedAt};
+  try{
+    setDriveState('sincronizando…');
+    await postDriveForm(payload);
+    const st=await waitDriveStatus(clientUpdatedAt);
+    ensureDriveMeta().driveSyncedAt=Number(st.updatedAt)||clientUpdatedAt;
+    await persistBrowser();
+    setDriveState('sincronizado ✓');
+    if(show)$('fileHelp').textContent='✓ Base actualizada automáticamente en Google Drive · '+new Date(Number(st.updatedAt)||Date.now()).toLocaleTimeString('es-CO',{hour:'2-digit',minute:'2-digit'});
+    return true
+  }catch(e){
+    setDriveState('pendiente ⚠️');
+    if(show)$('fileHelp').textContent='⚠️ '+(e&&e.message?e.message:'No se pudo confirmar Google Drive.')+' Los datos siguen guardados localmente y se reintentará.';
+    return false
+  }finally{
+    driveSyncBusy=false;
+    if(driveSyncQueued){driveSyncQueued=false;setTimeout(()=>saveDriveNow(false),400)}
+  }
+}
+async function loadDriveRemote(mode='startup'){
+  if(!driveConfigured())return false;
+  try{
+    setDriveState('comprobando…');
+    const r=await jsonp(driveUrl()+'?action=load&token='+encodeURIComponent(db.config.driveToken));
+    if(!r?.ok||!r.data){
+      setDriveState('sin archivo');
+      if(mode==='startup')$('fileHelp').textContent='☁️ No hay una copia disponible en Google Drive todavía. Los datos locales siguen intactos.';
+      return false
+    }
+    const remote=normalize(r.data);
+    const rt=Number(remote._meta?.updatedAt)||0;
+    const lt=Number(db._meta?.updatedAt)||0;
+    const synced=Number(db._meta?.driveSyncedAt)||0;
+    const localChangedSinceSync=lt>synced;
+    const remoteChangedSinceSync=rt>synced;
+
+    if(rt>lt){
+      if(localChangedSinceSync){
+        setDriveState('revisión necesaria ⚠️');
+        const useRemote=confirm('Google Drive tiene datos más recientes que este dispositivo. También hay cambios locales que todavía no se han sincronizado.\n\n¿Quieres reemplazar los datos locales por la copia de Google Drive?\n\nPulsa “Cancelar” para conservar los datos locales.');
+        if(useRemote){
+          db=remote;
+          ensureDriveMeta().driveSyncedAt=rt;
+          await persistBrowser();
+          renderAll();
+          setDriveState('sincronizado ✓');
+          $('fileHelp').textContent='✓ Se cargó la copia más reciente de Google Drive.';
+          return true
+        }
+        setDriveState('pendiente ⚠️');
+        $('fileHelp').textContent='⚠️ Se conservaron los datos locales. Puedes revisar y sincronizar manualmente desde Configuración.';
+        return false
+      }
+      db=remote;
+      ensureDriveMeta().driveSyncedAt=rt;
+      await persistBrowser();
+      renderAll();
+      setDriveState('sincronizado ✓');
+      if(mode==='startup')$('fileHelp').textContent='✓ Datos actualizados automáticamente desde Google Drive.';
+      return true
+    }
+
+    if(lt>rt){
+      if(remoteChangedSinceSync || !synced){
+        await saveDriveNow(false);
+        return true
+      }
+      await saveDriveNow(false);
+      return true
+    }
+
+    ensureDriveMeta().driveSyncedAt=rt;
+    await persistBrowser();
+    setDriveState('sincronizado ✓');
+    return false
+  }catch(e){
+    setDriveState('pendiente ⚠️');
+    if(mode==='startup')$('fileHelp').textContent='⚠️ No fue posible comprobar Google Drive. Los datos locales siguen disponibles y se reintentará automáticamente.';
+    return false
+  }
+}
+async function autoSave(){db._meta=db._meta||{};db._meta.updatedAt=Date.now();await persistBrowser();if(fileHandle)await writeFile(false);if(driveConfigured()){clearTimeout(driveSyncTimer);driveSyncTimer=setTimeout(()=>saveDriveNow(false),250)}}
+function openPage(id){document.querySelectorAll('.page').forEach(p=>p.classList.remove('active'));$(id).classList.add('active');document.querySelectorAll('nav button').forEach(b=>b.classList.toggle('active',b.dataset.page===id))}
+document.querySelectorAll('nav button').forEach(b=>b.onclick=()=>openPage(b.dataset.page));
+async function idbSetHandle(h){try{let d=await openStateDB();await new Promise((res,rej)=>{let tx=d.transaction('state','readwrite');tx.objectStore('state').put(h,'fileHandle');tx.oncomplete=res;tx.onerror=()=>rej(tx.error)})}catch(e){}}
+async function idbGetHandle(){try{let d=await openStateDB();return await new Promise((res,rej)=>{let q=d.transaction('state','readonly').objectStore('state').get('fileHandle');q.onsuccess=()=>res(q.result||null);q.onerror=()=>rej(q.error)})}catch(e){return null}}
+async function ensureFilePermission(){if(!fileHandle)return false;try{let p=await fileHandle.queryPermission({mode:'readwrite'});if(p==='granted')return true;if(fileHandle.requestPermission){p=await fileHandle.requestPermission({mode:'readwrite'});return p==='granted'}}catch(e){}return false}
+async function writeFile(show=true){if(!fileHandle)return false;try{if(!(await ensureFilePermission())){if(show)$('fileHelp').textContent='Autoriza el acceso al archivo para activar el guardado automático.';return false}let w=await fileHandle.createWritable();await w.write(JSON.stringify(db,null,2));await w.close();$('fileState').textContent='📁 Archivo conectado: '+fileHandle.name;if(show)$('fileHelp').textContent='✓ Archivo actualizado correctamente.';return true}catch(e){$('fileState').textContent='⚠️ Archivo no actualizado';if(show)$('fileHelp').textContent='No se pudo escribir el archivo. Los datos siguen guardados en el navegador.';return false}}
+async function restoreConnectedFile(){fileHandle=await idbGetHandle();if(!fileHandle)return;try{if(await ensureFilePermission()){let f=await fileHandle.getFile();if(f.size){let x=JSON.parse(await f.text());db=normalize(x);await persistBrowser();renderAll()}$('fileState').textContent='📁 Archivo conectado: '+fileHandle.name}else $('fileState').textContent='📁 Archivo conectado · permiso pendiente'}catch(e){$('fileState').textContent='📁 Archivo conectado · abre Configuración para autorizar'}}
+$('connectFile').onclick=async()=>{if(!window.showSaveFilePicker){alert('Este navegador no permite conectar directamente un archivo local. Usa Importar archivo para cargar un JSON y Guardar archivo para crear un respaldo.');return}try{fileHandle=await window.showSaveFilePicker({suggestedName:'datos-control-negocio.json',types:[{description:'Datos del negocio',accept:{'application/json':['.json']}}]});await idbSetHandle(fileHandle);await writeFile(true);renderAll()}catch(e){}};
+$('saveFileNow').onclick=async()=>{if(!fileHandle){$('connectFile').click();return}await writeFile(true)};
+$('importFileBtn').onclick=()=>$('importFile').click();
+$('importFile').onchange=e=>{let f=e.target.files[0];if(!f)return;let r=new FileReader();r.onload=async()=>{try{db=normalize(JSON.parse(r.result));await persistBrowser();if(fileHandle)await writeFile(false);renderAll();alert('Información importada correctamente.')}catch(_){alert('El archivo JSON no es válido o está incompleto.')}};r.readAsText(f);e.target.value=''};
+
+function editVenta(id){let x=db.ventas.find(a=>a.id===id);if(!x)return;openPage('ventas');$('ventaId').value=x.id;$('ventaProducto').value=x.producto;$('ventaValor').value=new Intl.NumberFormat('es-CO').format(x.valor);$('ventaFecha').value=x.fecha;$('ventaCantidad').value=x.cantidad||1;$('ventaInventario').value=x.inventarioId||'';let inv=db.inventario.find(p=>p.id===x.inventarioId);$('ventaInventarioSearch').value=inv?.producto||'';updateInventorySaleSelection();$('ventaNota').value=x.nota||'';$('ventaTitle').textContent='✏️ Editar venta';$('ventaCancel').hidden=false}
+function resetVenta(){$('ventaForm').reset();$('ventaId').value='';$('ventaFecha').value=today();$('ventaCantidad').value=1;$('ventaInventario').value='';$('ventaInventarioSearch').value='';$('ventaInventarioHint').textContent='Escribe el nombre o selecciónalo de la lista para descontar stock.';$('ventaInventarioHint').style.color='';$('ventaInventorySuggestions').classList.remove('open');$('ventaTitle').textContent='➕ Registrar venta';$('ventaCancel').hidden=true;populateInvSelect()}
+$('ventaCancel').onclick=resetVenta;
+$('ventaForm').onsubmit=async e=>{e.preventDefault();let id=$('ventaId').value, val=numValue($('ventaValor').value), invId=$('ventaInventario').value, cant=Math.max(1,+$('ventaCantidad').value||1);if(val<0)return;let old=db.ventas.find(x=>x.id===id);let x={id:id||crypto.randomUUID(),producto:$('ventaProducto').value.trim(),valor:val,fecha:$('ventaFecha').value,cantidad:cant,inventarioId:invId,nota:$('ventaNota').value.trim(),createdAt:old?.createdAt||nowStamp()};if(old){Object.assign(old,x)}else db.ventas.push(x);if(invId&&!old){let p=db.inventario.find(a=>a.id===invId);if(p)p.stock=Math.max(0,p.stock-cant)}await autoSave();resetVenta();renderAll()};
+
+function editGasto(id){let x=db.gastos.find(a=>a.id===id);if(!x)return;openPage('gastos');$('gastoId').value=x.id;$('gastoProducto').value=x.producto;$('gastoValor').value=new Intl.NumberFormat('es-CO').format(x.valor);$('gastoFecha').value=x.fecha;$('gastoNota').value=x.nota||'';$('gastoTitle').textContent='✏️ Editar gasto';$('gastoCancel').hidden=false}
+function resetGasto(){$('gastoForm').reset();$('gastoId').value='';$('gastoFecha').value=today();$('gastoTitle').textContent='➕ Registrar gasto';$('gastoCancel').hidden=true}
+$('gastoCancel').onclick=resetGasto;
+$('gastoForm').onsubmit=async e=>{e.preventDefault();let id=$('gastoId').value,old=db.gastos.find(x=>x.id===id),x={id:id||crypto.randomUUID(),producto:$('gastoProducto').value.trim(),valor:numValue($('gastoValor').value),fecha:$('gastoFecha').value,nota:$('gastoNota').value.trim(),createdAt:old?.createdAt||nowStamp()};if(old)Object.assign(old,x);else db.gastos.push(x);await autoSave();resetGasto();renderAll()};
+
+function deleteItem(kind,id){if(!confirm('¿Seguro que deseas eliminar este registro?'))return;if(kind==='venta')db.ventas=db.ventas.filter(x=>x.id!==id);if(kind==='gasto')db.gastos=db.gastos.filter(x=>x.id!==id);if(kind==='inventario')db.inventario=db.inventario.filter(x=>x.id!==id);if(kind==='documento')db.documentos=db.documentos.filter(x=>x.id!==id);if(kind==='nota')db.notas=db.notas.filter(x=>x.id!==id);autoSave().then(renderAll)}
+function normalizeSearch(v){return String(v||'').toLocaleLowerCase('es-CO').normalize('NFD').replace(/[\u0300-\u036f]/g,'').trim()}
+function populateInvSelect(){let select=$('ventaInventario'),search=$('ventaInventarioSearch'),old=select.value;select.innerHTML='<option value="">No descontar inventario</option>'+db.inventario.map(x=>`<option value="${x.id}">${esc(x.producto)} · Stock ${x.stock}</option>`).join('');select.value=old||'';let p=select.value?db.inventario.find(x=>x.id===select.value):null;if(p){search.value=p.producto;applyInventoryProduct(p.id,false)}else if(!search.matches(':focus')){search.value='';clearInventorySelection(false)}renderInventorySuggestions()}
+function inventoryMatches(){let q=normalizeSearch($('ventaInventarioSearch').value);return q?db.inventario.filter(x=>normalizeSearch(x.producto).includes(q)).slice(0,12):db.inventario.slice(0,12)}
+function renderInventorySuggestions(){let box=$('ventaInventorySuggestions');if(!box)return;let input=$('ventaInventarioSearch');let q=normalizeSearch(input.value),matches=inventoryMatches();if(!q){box.innerHTML=db.inventario.length?db.inventario.slice(0,12).map(x=>inventorySuggestionHtml(x)).join(''):'<div class="inventory-empty">No hay productos registrados en el inventario.</div>';box.classList.toggle('open',document.activeElement===input&&db.inventario.length>0);return}box.innerHTML=matches.length?matches.map(x=>inventorySuggestionHtml(x)).join(''):'<div class="inventory-empty">No hay productos que coincidan con la búsqueda.</div>';box.classList.add('open');}
+function inventorySuggestionHtml(x){return `<button type="button" class="inventory-suggestion" onclick="applyInventoryProduct('${x.id}')"><span class="inv-name">📦 ${esc(x.producto)}</span><span class="inv-stock">Stock: ${x.stock} · Venta: ${money(x.venta)}</span></button>`}
+function applyInventoryProduct(id,close=true){let p=db.inventario.find(x=>x.id===id);if(!p)return;let select=$('ventaInventario'),search=$('ventaInventarioSearch'),qty=Math.max(1,+$('ventaCantidad').value||1);select.value=p.id;search.value=p.producto;$('ventaProducto').value=p.producto;$('ventaValor').value=new Intl.NumberFormat('es-CO').format((Number(p.venta)||0)*qty);let hint=$('ventaInventarioHint');hint.textContent=`✓ ${p.producto} · Stock disponible: ${p.stock} · Venta: ${money(p.venta)} por unidad`;hint.style.color='var(--green)';if(close)$('ventaInventorySuggestions').classList.remove('open')}
+function clearInventorySelection(clearFields=true){let select=$('ventaInventario'),hint=$('ventaInventarioHint');select.value='';hint.textContent='Escribe el nombre para ver productos relacionados y selecciona uno.';hint.style.color='';if(clearFields){$('ventaProducto').value='';$('ventaValor').value=''}}
+function updateInventorySaleSelection(){let q=normalizeSearch($('ventaInventarioSearch').value);if(!q){clearInventorySelection(true);renderInventorySuggestions();return}let matches=inventoryMatches();let exact=matches.find(x=>normalizeSearch(x.producto)===q);if(exact){applyInventoryProduct(exact.id,false)}else{let select=$('ventaInventario');select.value='';let hint=$('ventaInventarioHint');hint.textContent=matches.length?`${matches.length} producto(s) encontrados. Selecciona uno para autorrellenar la venta.`:'No hay productos con ese nombre.';hint.style.color=matches.length?'var(--blue)':'var(--red)';renderInventorySuggestions()}}
+$('ventaInventarioSearch').addEventListener('input',()=>{updateInventorySaleSelection();renderInventorySuggestions()});$('ventaInventarioSearch').addEventListener('focus',renderInventorySuggestions);$('ventaInventarioSearch').addEventListener('keydown',e=>{if(e.key==='Escape')$('ventaInventorySuggestions').classList.remove('open')});document.addEventListener('click',e=>{let box=$('ventaInventorySuggestions'),input=$('ventaInventarioSearch');if(box&&e.target!==input&&!box.contains(e.target))box.classList.remove('open')});$('ventaCantidad').addEventListener('input',()=>{let id=$('ventaInventario').value;if(id)applyInventoryProduct(id,false)});
+function esc(s){return String(s??'').replace(/[&<>"']/g,c=>({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#039;'}[c]))}
+
+function getMovements(){
+ let a=[...db.ventas.map(x=>({date:x.fecha,ts:x.createdAt||0,kind:'venta',label:'Venta',name:x.producto,value:x.valor,detail:`Cantidad: ${x.cantidad||1}`,id:x.id})),
+ ...db.gastos.map(x=>({date:x.fecha,ts:x.createdAt||0,kind:'gasto',label:'Gasto',name:x.producto,value:x.valor,detail:x.nota||'',id:x.id})),
+ ...db.inventario.map(x=>({date:x.createdDate||today(),ts:x.createdAt||0,kind:'inventario',label:'Inventario',name:x.producto,value:x.venta||0,detail:`Stock: ${x.stock}`,id:x.id})),
+ ...db.documentos.map(x=>({date:x.fecha,ts:x.createdAt||0,kind:'documento',label:x.tipo==='factura'?'Factura':'Cotización',name:x.razon,value:x.total,detail:x.nit||'',id:x.id}))];
+ return a.sort((a,b)=>b.ts-a.ts)
+}
+function renderMovements(){
+ let all=getMovements(),q=$('mSearch').value.toLowerCase().trim(),t=$('mTipo').value,y=$('mYear').value,m=$('mMonth').value,d=$('mDay').value;
+ let years=[...new Set(all.map(x=>x.date.slice(0,4)))].sort().reverse(),prev=$('mYear').value;$('mYear').innerHTML='<option value="">Todos</option>'+years.map(v=>`<option>${v}</option>`).join('');$('mYear').value=years.includes(prev)?prev:'';
+ let filtered=all.filter(x=>(!t||x.kind===t)&&(!y||x.date.startsWith(y))&&(!m||x.date.slice(5,7)===m)&&(!d||x.date===d)&&(!q||(x.name+' '+x.detail+' '+x.label).toLowerCase().includes(q)));
+ $('movementBody').innerHTML=filtered.length?filtered.map(x=>`<tr><td>${fmtDateTime(x.ts,x.date)}</td><td><span class="badge ${x.kind==='venta'?'b-sale':x.kind==='gasto'?'b-exp':x.kind==='inventario'?'b-inv':'b-doc'}">${x.kind==='venta'?'🟢':x.kind==='gasto'?'🔴':x.kind==='inventario'?'🟠':'🟣'} ${x.label}</span></td><td><b>${esc(x.name)}</b></td><td class="right">${money(x.value)}</td><td>${esc(x.detail)}</td><td>${x.kind==='venta'?`<button class="btn primary" onclick="prepareTransactionDocument('venta','${x.id}')">🧾 Factura</button> <button class="btn secondary" onclick="editVenta('${x.id}')">✏️</button> <button class="btn danger" onclick="deleteItem('venta','${x.id}')">🗑️</button>`:x.kind==='gasto'?`<button class="btn warning" onclick="prepareTransactionDocument('gasto','${x.id}')">🧾 Comprobante</button> <button class="btn secondary" onclick="editGasto('${x.id}')">✏️</button> <button class="btn danger" onclick="deleteItem('gasto','${x.id}')">🗑️</button>`:x.kind==='inventario'?`<button class="btn danger" onclick="deleteItem('inventario','${x.id}')">🗑️</button>`:`<button class="btn primary" onclick="showDoc('${x.id}')">👁️ Ver / imprimir</button> <button class="btn secondary" onclick="editDoc('${x.id}')">✏️</button> <button class="btn danger" onclick="deleteItem('documento','${x.id}')">🗑️</button>`}</td></tr>`).join(''):'<tr><td colspan="6" class="empty">No hay movimientos con estos filtros.</td></tr>';
+ let sv=filtered.filter(x=>x.kind==='venta').reduce((a,x)=>a+x.value,0),sg=filtered.filter(x=>x.kind==='gasto').reduce((a,x)=>a+x.value,0);$('mSales').textContent=money(sv);$('mExpenses').textContent=money(sg);$('mBalance').textContent=money(sv-sg)
+}
+['mTipo','mYear','mMonth','mDay','mSearch'].forEach(id=>$(id).addEventListener('input',renderMovements));$('mClear').onclick=()=>{$('mTipo').value='';$('mYear').value='';$('mMonth').value='';$('mDay').value='';$('mSearch').value='';renderMovements()};
+
+function renderToday(){
+ let td=today();$('todayDate').textContent=fmtDate(td);$('todayDate2').textContent=fmtDate(td);
+ let s=db.ventas.filter(x=>x.fecha===td).sort((a,b)=>(b.createdAt||0)-(a.createdAt||0)),g=db.gastos.filter(x=>x.fecha===td).sort((a,b)=>(b.createdAt||0)-(a.createdAt||0));
+ let st=s.reduce((a,x)=>a+x.valor,0),gt=g.reduce((a,x)=>a+x.valor,0);$('todaySalesTotal').textContent=money(st);$('todaySalesCount').textContent=s.length;$('todaySalesAvg').textContent=money(s.length?st/s.length:0);$('todayExpTotal').textContent=money(gt);$('todayExpCount').textContent=g.length;$('todayExpAvg').textContent=money(g.length?gt/g.length:0);
+ $('todaySales').innerHTML=s.length?s.map(x=>`<div class="today-item"><div><span class="name">🟢 ${esc(x.producto)}</span><small>${fmtDateTime(x.createdAt,x.fecha)} · Cantidad ${x.cantidad||1}</small></div><strong>${money(x.valor)} <button class="btn primary" onclick="prepareTransactionDocument('venta','${x.id}')">🧾</button></strong></div>`).join(''):'<div class="empty">No hay ventas registradas hoy.</div>';
+ $('todayExpenses').innerHTML=g.length?g.map(x=>`<div class="today-item"><div><span class="name">🔴 ${esc(x.producto)}</span><small>${fmtDateTime(x.createdAt,x.fecha)}</small></div><strong>${money(x.valor)} <button class="btn warning" onclick="prepareTransactionDocument('gasto','${x.id}')">🧾</button></strong></div>`).join(''):'<div class="empty">No hay gastos registrados hoy.</div>'
+}
+
+let pendingPhoto='';
+$('invFoto').onchange=()=>{let f=$('invFoto').files[0];if(!f)return;let r=new FileReader();r.onload=()=>{pendingPhoto=r.result;$('photoPreview').src=pendingPhoto;$('photoInfo').textContent='✓ Vista previa lista. La foto se guardará al registrar el producto.'};r.readAsDataURL(f)}
+function resetInv(){$('invForm').reset();$('invId').value='';pendingPhoto='';$('photoPreview').removeAttribute('src');$('photoInfo').textContent='';$('invTitle').textContent='📦 Registrar producto';$('invCancel').hidden=true}
+$('invCancel').onclick=resetInv;
+$('invForm').onsubmit=async e=>{e.preventDefault();let id=$('invId').value,old=db.inventario.find(x=>x.id===id),photo=pendingPhoto||old?.foto||'';let x={id:id||crypto.randomUUID(),producto:$('invProducto').value.trim(),stock:Math.max(0,+$('invStock').value||0),compra:numValue($('invCompra').value),venta:numValue($('invVenta').value),foto:photo,createdAt:old?.createdAt||nowStamp(),createdDate:old?.createdDate||today()};if(old)Object.assign(old,x);else db.inventario.unshift(x);await autoSave();resetInv();renderAll();openPage('inventario')};
+function editInv(id){let x=db.inventario.find(a=>a.id===id);if(!x)return;openPage('inventario');$('invId').value=x.id;$('invProducto').value=x.producto;$('invStock').value=x.stock;$('invCompra').value=new Intl.NumberFormat('es-CO').format(x.compra);$('invVenta').value=new Intl.NumberFormat('es-CO').format(x.venta);pendingPhoto=x.foto||'';if(pendingPhoto)$('photoPreview').src=pendingPhoto;$('invTitle').textContent='✏️ Editar producto';$('invCancel').hidden=false}
+function publicCatalogUrl(){let base=String(db.config.publicCatalogBaseUrl||'').trim().replace(/\/$/,'');let api=driveUrl(),key=String(db.config.publicCatalogKey||'').trim();if(!base||!api||!key)return '';return base+'/?key='+encodeURIComponent(key)+'&api='+encodeURIComponent(api)}
+function ensurePublicCatalogKey(){if(!db.config.publicCatalogKey){if(window.crypto?.randomUUID)db.config.publicCatalogKey=crypto.randomUUID().replace(/-/g,'');else db.config.publicCatalogKey=Math.random().toString(36).slice(2)+Date.now().toString(36)}return db.config.publicCatalogKey}
+async function shareInventory(){
+ if(!driveConfigured()){alert('Primero configura y conecta Google Drive en Configuración.');return}
+ const available=db.inventario;
+ if(!available.length){alert('No tienes productos registrados para compartir.');return}
+ ensurePublicCatalogKey();
+ await autoSave();
+ if(driveConfigured()) await saveDriveNow(true);
+ const url=publicCatalogUrl();
+ if(!url){alert('Falta configurar la URL base del catálogo PWA en Configuración. Guarda esa dirección y vuelve a compartir.');return}
+ $('inventoryShareLink').value=url;
+ $('inventoryShareBox').style.display='block';
+ try{await navigator.clipboard.writeText(url);alert('Enlace del inventario generado y copiado. Compártelo con tus clientes.')}catch(e){alert('Enlace generado. Pulsa “Copiar enlace” para copiarlo.')}
+}
+$('shareInventoryBtn').onclick=shareInventory;
+$('copyInventoryLink').onclick=async()=>{const u=$('inventoryShareLink').value;if(!u)return;try{await navigator.clipboard.writeText(u);alert('Enlace copiado.')}catch(e){$('inventoryShareLink').focus();$('inventoryShareLink').select();document.execCommand('copy');alert('Enlace copiado.')}};
+$('openInventoryLink').onclick=()=>{const u=$('inventoryShareLink').value;if(u)window.open(u,'_blank','noopener,noreferrer')};
+
+function renderInventory(){
+ let q=normalizeSearch($('inventorySearch')?.value||'');
+ let products=db.inventario.filter(x=>!q||normalizeSearch(x.producto).includes(q));
+ let investment=db.inventario.reduce((sum,x)=>sum+(Number(x.stock)||0)*(Number(x.compra)||0),0);
+ let salesValue=db.inventario.reduce((sum,x)=>sum+(Number(x.stock)||0)*(Number(x.venta)||0),0);
+ let profit=salesValue-investment;
+ $('invInvestmentTotal').textContent=money(investment);$('invSalesValueTotal').textContent=money(salesValue);$('invProfitTotal').textContent=money(profit);
+ $('invProfitTotal').classList.toggle('profit-positive',profit>0);$('invProfitTotal').classList.toggle('profit-negative',profit<0);
+ $('inventorySearchInfo').textContent=q?`${products.length} de ${db.inventario.length} producto(s) encontrados.`:`${db.inventario.length} producto(s) registrados.`;
+ const noPhoto='data:image/svg+xml;charset=UTF-8,'+encodeURIComponent('<svg xmlns="http://www.w3.org/2000/svg" width="500" height="350"><rect width="100%" height="100%" fill="#eef2f6"/><text x="50%" y="50%" text-anchor="middle" dominant-baseline="middle" fill="#667085" font-size="24">Sin foto</text></svg>');
+ $('productGrid').innerHTML=products.length?products.map(x=>{let unitProfit=(Number(x.venta)||0)-(Number(x.compra)||0),stockProfit=(Number(x.stock)||0)*unitProfit;return `<article class="product-card"><img class="product-photo" src="${x.foto||noPhoto}" alt="${esc(x.producto)}"><div class="product-body"><h3>${esc(x.producto)}</h3><div class="product-meta"><div class="meta-box">Stock<b>${x.stock}</b></div><div class="meta-box">Compra<b>${money(x.compra)}</b></div><div class="meta-box">Venta<b>${money(x.venta)}</b></div><div class="meta-box">Inversión<b>${money((Number(x.stock)||0)*(Number(x.compra)||0))}</b></div><div class="meta-box">Ganancia / unidad<b class="${unitProfit<0?'profit-negative':'profit-positive'}">${money(unitProfit)}</b></div><div class="meta-box">Ganancia del stock<b class="${stockProfit<0?'profit-negative':'profit-positive'}">${money(stockProfit)}</b></div></div><div class="actions"><button class="btn secondary" onclick="editInv('${x.id}')">✏️ Editar</button><button class="btn danger" onclick="deleteItem('inventario','${x.id}')">🗑️ Eliminar</button></div></div></article>`}).join(''):'<div class="empty product-search-empty">'+(q?'No se encontraron productos con ese nombre.':'No hay productos registrados.')+'</div>'
+}
+$('inventorySearch').addEventListener('input',renderInventory);
+
+function loadConfig(){let c=db.config;document.title=c.name||'Control de Negocio';$('appName').textContent=c.name||'Control de Negocio';applyBusinessName();$('cfgName').value=c.name||'';$('cfgPhone').value=c.phone||'';$('cfgInstagram').value=c.instagram||'';$('cfgFacebook').value=c.facebook||'';$('cfgEmail').value=c.email||'';$('cfgAddress').value=c.address||'';$('cfgCity').value=c.city||'';$('cfgDriveUrl').value=c.driveScriptUrl||'';$('cfgDriveToken').value=c.driveToken||'';$('cfgCatalogBaseUrl').value=c.publicCatalogBaseUrl||'';if(c.logo){$('logoPreview').src=c.logo;$('headerLogo').src=c.logo;$('headerLogo').hidden=false}}
+$('cfgLogo').onchange=async()=>{let f=$('cfgLogo').files[0];if(!f)return;let r=new FileReader();r.onload=async()=>{db.config.logo=r.result;$('logoPreview').src=r.result;$('headerLogo').src=r.result;$('headerLogo').hidden=false;await autoSave()};r.readAsDataURL(f)}
+function applyBusinessName(){let n=(db.config.name||'Control de Negocio').trim()||'Control de Negocio';$('appName').textContent=n;document.title=n+' · Control de Negocio'}
+$('saveConfig').onclick=async()=>{db.config.name=$('cfgName').value.trim()||'Control de Negocio';db.config.phone=$('cfgPhone').value.trim();db.config.instagram=$('cfgInstagram').value.trim();db.config.facebook=$('cfgFacebook').value.trim();db.config.email=$('cfgEmail').value.trim();db.config.address=$('cfgAddress').value.trim();db.config.city=$('cfgCity').value.trim();db.config.driveScriptUrl=$('cfgDriveUrl').value.trim();db.config.driveToken=$('cfgDriveToken').value.trim();db.config.publicCatalogBaseUrl=$('cfgCatalogBaseUrl').value.trim();applyBusinessName();await autoSave();renderAll();alert('Identidad y contacto guardados correctamente.')}
+$('saveDriveConfig').onclick=async()=>{
+  db.config.driveScriptUrl=$('cfgDriveUrl').value.trim().replace(/\/$/,'');
+  db.config.driveToken=$('cfgDriveToken').value.trim();
+  ensureDriveMeta();
+  await autoSave();
+  setDriveState(driveConfigured()?'configurado':'no configurado');
+  if(driveConfigured())await loadDriveRemote('manual');
+  alert(driveConfigured()?'Conexión con Google Drive guardada. Desde ahora este dispositivo comprobará Drive automáticamente al abrir el sistema.':'Conexión de Google Drive quitada.')
+}
+$('syncDriveNow').onclick=async()=>{
+  if(!driveConfigured()){alert('Primero configura la URL de Apps Script y el token secreto.');return}
+  await loadDriveRemote('manual')
+}
+$('restoreDriveNow').onclick=async()=>{
+  if(!driveConfigured()){alert('Primero configura la URL de Apps Script y el token secreto.');return}
+  if(confirm('Esto reemplazará los datos locales por la copia de Google Drive si la copia de Drive es más reciente. ¿Continuar?')){
+    const ok=await loadDriveRemote('manual');
+    alert(ok?'Proceso de sincronización/restauración completado.':'No hubo cambios que restaurar o no fue posible conectarse.')
+  }
+}
+
+function docRowHtml(r={qty:1,desc:'',unit:0}){return `<div class="doc-row"><input class="doc-qty" type="number" min="0" step="1" value="${r.qty}"><input class="doc-desc" placeholder="Descripción del servicio o producto" value="${esc(r.desc)}"><input class="doc-unit money-input" inputmode="numeric" placeholder="Valor unitario" value="${r.unit?new Intl.NumberFormat('es-CO').format(r.unit):''}"><input class="doc-line money-input" readonly placeholder="Valor total"><button class="btn danger remove-row" type="button">✕</button></div>`}
+function addDocRow(r){$('docRows').insertAdjacentHTML('beforeend',docRowHtml(r));let row=$('docRows').lastElementChild;row.querySelectorAll('.doc-qty,.doc-desc,.doc-unit').forEach(i=>i.addEventListener('input',()=>{if(i.classList.contains('doc-unit'))formatInput(i);calcDoc()}));row.querySelector('.remove-row').onclick=()=>{row.remove();calcDoc()};calcDoc()}
+function calcDoc(){let total=0;document.querySelectorAll('#docRows .doc-row').forEach(row=>{let q=Math.max(0,+row.querySelector('.doc-qty').value||0),u=numValue(row.querySelector('.doc-unit').value),v=q*u;row.querySelector('.doc-line').value=v?new Intl.NumberFormat('es-CO').format(v):'';total+=v});$('docTotal').textContent=money(total);return total}
+$('addDocRow').onclick=()=>addDocRow({});
+function setupDocumentWorkspace(){
+ let body=$('docWorkspaceBody');
+ if(!body||!$('docForm'))return;
+ if(!$('docForm').dataset.moved){
+   body.appendChild($('docForm'));
+   body.appendChild($('docPreview'));
+   $('docForm').classList.remove('no-print');
+   $('docForm').dataset.moved='1';
+ }
+}
+function openDocumentWorkspace(title,hint='Completa los datos de la persona o empresa a quien va dirigida y luego guarda o imprime el documento.'){
+ setupDocumentWorkspace();
+ openPage('documentos');
+ $('docWorkspace').style.display='block';
+ $('docWorkspaceTitle').textContent=title;
+ $('docWorkspaceHint').textContent=hint;
+ $('docPreview').style.display='none';
+ window.scrollTo({top:$('docWorkspace').offsetTop-15,behavior:'smooth'});
+}
+function closeDocumentWorkspace(){
+ $('docWorkspace').style.display='none';
+ $('docPreview').style.display='none';
+ $('docPreview').dataset.transaction='';
+}
+function newDoc(type,fromSale=null){
+ openDocumentWorkspace(type==='factura'?'🧾 Nueva factura':'📄 Nueva cotización');
+ $('docId').value='';$('docType').value=type;$('docFecha').value=today();$('docRazon').value='';$('docNit').value='';$('docCiudad').value=db.config.city||'';$('docObs').value='';$('docRows').innerHTML='';
+ if(fromSale)addDocRow({qty:fromSale.cantidad||1,desc:fromSale.producto,unit:fromSale.valor/(fromSale.cantidad||1)});else addDocRow({});
+ $('docPreview').style.display='none';
+}
+function prepareTransactionDocument(kind,id){
+ let t=transactionData(kind,id);if(!t)return;
+ let isSale=kind==='venta';
+ openDocumentWorkspace(isSale?'🧾 Factura de venta':'🧾 Comprobante de gasto',isSale?'Esta factura fue creada desde la venta. Escribe a quién va dirigida, revisa los datos y guárdala antes de imprimir.':'Este comprobante fue creado desde el gasto. Escribe el proveedor o persona a quien corresponde, revisa los datos y guárdalo antes de imprimir.');
+ $('docId').value='';
+ $('docType').value=isSale?'factura':'comprobante';
+ $('docFecha').value=t.fecha;
+ $('docRazon').value='';$('docNit').value='';$('docCiudad').value=db.config.city||'';
+ $('docObs').value=t.nota||'';
+ $('docRows').innerHTML='';
+ addDocRow({qty:t.cantidad||1,desc:t.concepto,unit:t.valor/(t.cantidad||1)});
+ $('docPreview').style.display='none';
+ $('docPreview').dataset.transactionSource=JSON.stringify({kind,id});
+}
+
+$('newInvoice').onclick=()=>newDoc('factura');$('newQuote').onclick=()=>newDoc('cotizacion');$('closeWorkspace').onclick=closeDocumentWorkspace;$('closeDoc').onclick=closeAnyDoc;
+function editDoc(id){let x=db.documentos.find(a=>a.id===id);if(!x)return;openDocumentWorkspace(x.tipo==='factura'?'✏️ Editar factura':x.tipo==='comprobante'?'✏️ Editar comprobante':'✏️ Editar cotización','Edita los datos del documento. Los cambios se guardarán automáticamente al guardar.');$('docId').value=x.id;$('docType').value=x.tipo;$('docFecha').value=x.fecha;$('docRazon').value=x.razon;$('docNit').value=x.nit||'';$('docCiudad').value=x.ciudad||'';$('docObs').value=x.obs||'';$('docRows').innerHTML='';x.items.forEach(addDocRow);$('docPreview').style.display='none';$('docPreview').dataset.transactionSource='';}
+$('docForm').onsubmit=async e=>{e.preventDefault();let id=$('docId').value,old=db.documentos.find(x=>x.id===id),items=[...document.querySelectorAll('#docRows .doc-row')].map(r=>({qty:+r.querySelector('.doc-qty').value||0,desc:r.querySelector('.doc-desc').value.trim(),unit:numValue(r.querySelector('.doc-unit').value)})).filter(x=>x.desc);let source=null;try{source=JSON.parse($('docPreview').dataset.transactionSource||'null')}catch(e){} let x={id:id||crypto.randomUUID(),numero:old?.numero||String(db.documentos.length+1).padStart(4,'0'),tipo:$('docType').value,fecha:$('docFecha').value,razon:$('docRazon').value.trim(),nit:$('docNit').value.trim(),ciudad:$('docCiudad').value.trim(),obs:$('docObs').value.trim(),items,total:items.reduce((a,r)=>a+r.qty*r.unit,0),createdAt:old?.createdAt||nowStamp(),origen:source?.kind||old?.origen||'',origenId:source?.id||old?.origenId||''};if(!x.razon){alert('Escribe a quién va dirigida la factura o el comprobante.');$('docRazon').focus();return}if(old)Object.assign(old,x);else db.documentos.unshift(x);await autoSave();$('docPreview').dataset.transaction='';$('docPreview').dataset.transactionSource='';$('docPreview').innerHTML=docHtml(x);$('docPreview').style.display='block';$('docWorkspace').style.display='block';$('docWorkspaceHint').textContent='Documento guardado correctamente. Ahora puedes imprimirlo o descargarlo.';renderAll()};
+function renderDocs(){$('docsBody').innerHTML=db.documentos.length?db.documentos.slice().sort((a,b)=>b.createdAt-a.createdAt).map(x=>`<tr><td><b>${esc(x.numero||'')}</b></td><td>${fmtDate(x.fecha)}</td><td><span class="badge ${x.tipo==='factura'?'b-doc':'b-doc'}">${x.tipo==='factura'?'🧾 Factura':x.tipo==='comprobante'?'🧾 Comprobante':'📄 Cotización'}</span></td><td>${esc(x.razon)}</td><td>${money(x.total)}</td><td><button class="btn secondary" onclick="editDoc('${x.id}')">✏️ Editar</button> <button class="btn primary" onclick="showDoc('${x.id}')">👁️ Ver</button> <button class="btn danger" onclick="deleteItem('documento','${x.id}')">🗑️</button></td></tr>`).join(''):'<tr><td colspan="6" class="empty">No hay documentos registrados.</td></tr>'}
+function transactionData(kind,id){let arr=kind==='venta'?db.ventas:db.gastos;let x=arr.find(a=>a.id===id);if(!x)return null;let isSale=kind==='venta';return {kind,id,fecha:x.fecha,concepto:x.producto,valor:x.valor,cantidad:x.cantidad||1,nota:x.nota||'',tipo:isSale?'FACTURA DE VENTA':'COMPROBANTE DE GASTO'} }
+function transactionHtml(t){let c=db.config||{};let cliente=t.cliente||{};return `<div class="invoice-head"><div>${c.logo?`<img class="invoice-logo" src="${c.logo}" alt="Logo">`:''}<h2>${esc(c.name||'Control de Negocio')}</h2><div>${esc(c.address||'')} ${c.city?'· '+esc(c.city):''}</div><div>${esc(c.phone||'')} ${c.email?'· '+esc(c.email):''}</div><div>${esc(c.instagram||'')} ${c.facebook?' · '+esc(c.facebook):''}</div></div><div style="text-align:right"><h2>${t.tipo}</h2><div>Fecha: ${fmtDate(t.fecha)}</div></div></div><div style="margin-top:18px"><b>Dirigida a:</b> ${esc(cliente.razon||'Cliente / proveedor')}<br>${cliente.nit?`<b>NIT / Documento:</b> ${esc(cliente.nit)}<br>`:''}${cliente.ciudad?`<b>Ciudad:</b> ${esc(cliente.ciudad)}<br>`:''}</div><table class="invoice-table"><thead><tr><th>Cantidad</th><th>Descripción</th><th>Valor unitario</th><th>Valor total</th></tr></thead><tbody><tr><td>${t.cantidad}</td><td>${esc(t.concepto)}</td><td>${money(t.valor/t.cantidad)}</td><td>${money(t.valor)}</td></tr></tbody></table><div class="invoice-total">${t.kind==='venta'?'Total a pagar':'Total del gasto'}: ${money(t.valor)}</div>${t.nota?`<p style="margin-top:22px"><b>Observaciones:</b> ${esc(t.nota)}</p>`:''}` }
+function showTransaction(kind,id){prepareTransactionDocument(kind,id)}
+function closeAnyDoc(){closeDocumentWorkspace();$('docModal').classList.remove('open')}
+function currentDocumentForOutput(){
+ let x=collectDoc();
+ if(!x.razon){alert('Escribe a quién va dirigida la factura o el comprobante antes de imprimir o descargar.');$('docRazon').focus();return null}
+ if(!x.items.length){alert('Agrega al menos un producto o servicio antes de imprimir o descargar.');return null}
+ return x;
+}
+function openPrintDocument(html,title){
+ let w=window.open('','_blank','width=920,height=900,scrollbars=yes,resizable=yes');
+ if(!w){alert('El navegador bloqueó la ventana de impresión. Permite las ventanas emergentes para este archivo y vuelve a intentarlo.');return false}
+ w.document.open();w.document.write(`<!doctype html><html lang="es"><head><meta charset="utf-8"><title>${esc(title)}</title><style>@page{size:A4;margin:10mm}html,body{margin:0;padding:0;background:#fff}body{font-family:Arial,Helvetica,sans-serif;color:#172033;-webkit-print-color-adjust:exact;print-color-adjust:exact}.print-wrap{width:190mm;margin:0 auto}.invoice-paper{width:190mm;min-height:277mm;margin:0!important;padding:8mm!important;box-sizing:border-box;border:0!important;box-shadow:none!important;background:#fff!important}.invoice-head{display:flex;justify-content:space-between;gap:18px;border-bottom:2px solid #111;padding-bottom:12px}.invoice-logo{max-width:42mm;max-height:26mm;object-fit:contain}.invoice-table{width:100%;border-collapse:collapse;margin-top:18px}.invoice-table th,.invoice-table td{border:1px solid #bfc5cc;padding:7px;font-size:11pt}.invoice-table th{background:#f1f5f9}.invoice-total{text-align:right;margin-top:16px;font-size:15pt;font-weight:900}.invoice-head h2{margin:0 0 7px}.invoice-head div{font-size:10pt;line-height:1.45}tr{page-break-inside:avoid}.print-actions{display:flex;gap:10px;margin:0 0 18px}.print-actions button{padding:10px 16px;border:1px solid #ccd3dc;border-radius:8px;background:#f3f5f7;font-weight:700;cursor:pointer}@media print{.print-actions{display:none!important}.print-wrap{width:auto}.invoice-paper{width:auto;min-height:auto;padding:0!important}}</style></head><body><div class="print-actions"><button onclick="window.print()">🖨️ Imprimir / Guardar PDF</button><button onclick="window.close()">✕ Cerrar</button></div><div class="print-wrap">${html}</div>
+</body></html>`);w.document.close();w.focus();setTimeout(()=>{try{w.print()}catch(e){}},350);return true;
+}
+function printSavedDoc(id){
+ let x=id?db.documentos.find(a=>a.id===id):currentDocumentForOutput();
+ if(!x)return;
+ if(!x.razon){alert('Escribe a quién va dirigida la factura o el comprobante antes de imprimir.');if(!id)$('docRazon').focus();return}
+ if(!x.items||!x.items.length){alert('El documento no tiene productos o servicios.');return}
+ openPrintDocument(docHtml(x),(x.tipo==='factura'?'Factura ':x.tipo==='comprobante'?'Comprobante ':'Cotizacion ')+(x.numero||''));
+}
+function pdfAscii(s){return String(s??'').normalize('NFD').replace(/[\u0300-\u036f]/g,'').replace(/[^\x20-\x7E]/g,'').replace(/\\/g,'\\\\').replace(/\(/g,'\\(').replace(/\)/g,'\\)')}
+function pdfWrap(s,max=72){let t=String(s??'').normalize('NFD').replace(/[\u0300-\u036f]/g,'').replace(/[^\x20-\x7E]/g,'');let out=[];while(t.length>max){let k=t.lastIndexOf(' ',max);if(k<1)k=max;out.push(t.slice(0,k));t=t.slice(k+1)}if(t)out.push(t);return out}
+function makeInvoicePDF(x){
+ let c=db.config||{}, rows=x.items||[], cmds=['q','0.12 0.18 0.28 rg'];
+ function text(txt,xp,yp,size=10,bold=false){cmds.push('BT',`/${bold?'F2':'F1'} ${size} Tf`,`1 0 0 1 ${xp} ${yp} Tm (${pdfAscii(txt)}) Tj`,'ET')}
+ cmds.push('Q');text(c.name||'Control de Negocio',40,770,18,true);text(x.tipo==='factura'?'FACTURA DE VENTA':x.tipo==='comprobante'?'COMPROBANTE DE GASTO':'COTIZACION',400,770,14,true);text('No. '+(x.numero||''),400,750,10);text('Fecha: '+fmtDate(x.fecha),400,734,10);
+ let y=742;text(c.address||'',40,y,9);y-=14;text(c.city?'Ciudad: '+c.city:'',40,y,9);y-=14;text(c.phone||'',40,y,9);y-=14;text(c.email||'',40,y,9);
+ y=675;text('DIRIGIDA A:',40,y,10,true);y-=16;text(x.razon||'',40,y,10);y-=14;if(x.nit){text('NIT / Documento: '+x.nit,40,y,9);y-=14}if(x.ciudad){text('Ciudad: '+x.ciudad,40,y,9);y-=14}
+ let top=y-10;cmds.push('0.94 0.95 0.97 rg',`40 ${top-22} 532 22 re f`);cmds.push('0.65 0.68 0.72 RG','0.7 w',`40 ${top-22} m 572 ${top-22} l`,`40 ${top-22} m 40 ${top-42} l`,`572 ${top-22} m 572 ${top-42} l`,'S');text('CANT.',48,top-15,9,true);text('DESCRIPCION',105,top-15,9,true);text('VALOR UNIT.',390,top-15,9,true);text('TOTAL',495,top-15,9,true);
+ y=top-40;rows.forEach(r=>{let desc=pdfWrap(r.desc||'',42);let h=Math.max(20,desc.length*13+6);cmds.push('0.72 0.74 0.78 RG','0.5 w',`40 ${y} m 572 ${y} l`,'S');text(String(r.qty||0),50,y-14,9);desc.forEach((line,i)=>text(line,105,y-14-i*12,9));text(money(r.unit||0),390,y-14,9);text(money((r.qty||0)*(r.unit||0)),495,y-14,9);y-=h});
+ cmds.push('0.72 0.74 0.78 RG','0.7 w',`40 ${y} m 572 ${y} l`,'S');y-=28;text(x.tipo==='comprobante'?'TOTAL DEL GASTO':'TOTAL A PAGAR',385,y,11,true);text(money(x.total),495,y,12,true);y-=30;if(x.obs){text('OBSERVACIONES:',40,y,9,true);y-=14;pdfWrap(x.obs,95).slice(0,5).forEach(line=>{text(line,40,y,9);y-=12})}text('Documento generado desde Control de Negocio',40,35,8,false);
+ let content=cmds.join('\n')+'\n', objs=[];objs.push('<< /Type /Catalog /Pages 2 0 R >>');objs.push('<< /Type /Pages /Kids [3 0 R] /Count 1 >>');objs.push('<< /Type /Page /Parent 2 0 R /MediaBox [0 0 595 842] /Resources << /Font << /F1 4 0 R /F2 5 0 R >> >> /Contents 6 0 R >>');objs.push('<< /Type /Font /Subtype /Type1 /BaseFont /Helvetica /Encoding /WinAnsiEncoding >>');objs.push('<< /Type /Font /Subtype /Type1 /BaseFont /Helvetica-Bold /Encoding /WinAnsiEncoding >>');let enc=new TextEncoder(),streamBytes=enc.encode(content);objs.push(`<< /Length ${streamBytes.length} >>\nstream\n${content}endstream`);
+ let pdf='%PDF-1.4\n',offsets=[0],bytes=enc.encode('');for(let i=0;i<objs.length;i++){offsets.push(enc.encode(pdf).length);pdf+=(i+1)+' 0 obj\n'+objs[i]+'\nendobj\n'}let xref=enc.encode(pdf).length;pdf+='xref\n0 '+(objs.length+1)+'\n0000000000 65535 f \n';for(let i=1;i<offsets.length;i++)pdf+=String(offsets[i]).padStart(10,'0')+' 00000 n \n';pdf+='trailer\n<< /Size '+(objs.length+1)+' /Root 1 0 R >>\nstartxref\n'+xref+'\n%%EOF';return pdf}
+function downloadPDF(id){let x=id?db.documentos.find(a=>a.id===id):currentDocumentForOutput();if(!x)return;if(!x.razon){alert('Escribe a quién va dirigida la factura o el comprobante antes de descargar.');return}if(!x.items||!x.items.length){alert('El documento no tiene productos o servicios.');return}try{let pdf=makeInvoicePDF(x),blob=new Blob([pdf],{type:'application/pdf'}),url=URL.createObjectURL(blob),a=document.createElement('a');a.href=url;a.download=(x.tipo==='factura'?'factura_':x.tipo==='comprobante'?'comprobante_':'cotizacion_')+(x.numero||'0000')+'.pdf';document.body.appendChild(a);a.click();a.remove();setTimeout(()=>URL.revokeObjectURL(url),3000)}catch(e){console.error(e);alert('No se pudo generar el PDF. Usa Imprimir / Guardar PDF como alternativa.')}}
+
+function showDoc(id){let x=db.documentos.find(a=>a.id===id);if(!x)return;openDocumentWorkspace(x.tipo==='factura'?'🧾 Factura':'📄 Cotización','Documento guardado. Puedes revisar los datos, editar y volver a imprimir.');$('docId').value=x.id;$('docType').value=x.tipo;$('docFecha').value=x.fecha;$('docRazon').value=x.razon;$('docNit').value=x.nit||'';$('docCiudad').value=x.ciudad||'';$('docObs').value=x.obs||'';$('docRows').innerHTML='';x.items.forEach(addDocRow);$('docPreview').innerHTML=docHtml(x);$('docPreview').style.display='block';$('docForm').style.display='';document.querySelector('#transactionActions')?.remove();$('docPreview').dataset.transaction='';$('docModal').classList.remove('open')}
+function downloadDocHtml(){let x=collectDoc();let full='<!doctype html><html><head><meta charset="utf-8"><title>'+esc(x.tipo==='factura'?'Factura':'Cotización')+'</title><style>body{font-family:Arial;padding:30px}.invoice-paper{max-width:800px;margin:auto}.invoice-head{display:flex;justify-content:space-between;border-bottom:2px solid #111;padding-bottom:15px}.invoice-logo{max-width:130px;max-height:80px}.invoice-table{width:100%;border-collapse:collapse;margin-top:20px}.invoice-table th,.invoice-table td{border:1px solid #ccc;padding:8px}.invoice-total{text-align:right;font-size:20px;font-weight:bold;margin-top:15px}</style></head><body><div class="invoice-paper">'+docHtml(x)+'</div></body></html>';let a=document.createElement('a');a.href=URL.createObjectURL(new Blob([full],{type:'text/html;charset=utf-8'}));a.download=(x.tipo==='factura'?'factura':'cotizacion')+'_'+(x.razon||'cliente').replace(/[^a-z0-9áéíóúñ_-]+/gi,'_')+'.html';a.click();setTimeout(()=>URL.revokeObjectURL(a.href),1000)}
+function docHtml(x){let c=db.config;return `<div class="invoice-head"><div>${c.logo?`<img class="invoice-logo" src="${c.logo}" alt="Logo">`:''}<h2>${esc(c.name)}</h2><div>${esc(c.address)} ${c.city?'· '+esc(c.city):''}</div><div>${esc(c.phone)} ${c.email?'· '+esc(c.email):''}</div><div>${esc(c.instagram)} ${c.facebook?' · '+esc(c.facebook):''}</div></div><div style="text-align:right"><h2>${x.tipo==='factura'?'FACTURA DE VENTA':x.tipo==='comprobante'?'COMPROBANTE DE GASTO':'COTIZACIÓN'}</h2><div>Fecha: ${fmtDate(x.fecha)}</div>${x.numero?`<div>N.º: ${esc(x.numero)}</div>`:''}</div></div><div style="margin-top:18px"><b>Razón social:</b> ${esc(x.razon)}<br><b>NIT:</b> ${esc(x.nit)}<br><b>Ciudad:</b> ${esc(x.ciudad)}</div><table class="invoice-table"><thead><tr><th>Cantidad</th><th>Descripción</th><th>Valor unitario</th><th>Valor total</th></tr></thead><tbody>${x.items.map(r=>`<tr><td>${r.qty}</td><td>${esc(r.desc)}</td><td>${money(r.unit)}</td><td>${money(r.qty*r.unit)}</td></tr>`).join('')}</tbody></table><div class="invoice-total">${x.tipo==='comprobante'?'Total del gasto':'Total a pagar'}: ${money(x.total)}</div>${x.obs?`<p style="margin-top:25px"><b>Observaciones:</b> ${esc(x.obs)}</p>`:''}`};
+$('printDoc').onclick=()=>printSavedDoc();
+$('downloadDoc').onclick=()=>downloadPDF();
+function collectDoc(){let id=$('docId').value,x=db.documentos.find(a=>a.id===id);let items=[...document.querySelectorAll('#docRows .doc-row')].map(r=>({qty:+r.querySelector('.doc-qty').value||0,desc:r.querySelector('.doc-desc').value.trim(),unit:numValue(r.querySelector('.doc-unit').value)})).filter(r=>r.desc);return {id:id||'',tipo:$('docType').value,fecha:$('docFecha').value,razon:$('docRazon').value.trim(),nit:$('docNit').value.trim(),ciudad:$('docCiudad').value.trim(),obs:$('docObs').value.trim(),items,total:items.reduce((a,r)=>a+r.qty*r.unit,0),createdAt:x?.createdAt||nowStamp()}}
+
+function reminderDateTime(date,time){if(!date)return null;let [y,m,d]=date.split('-').map(Number);let [hh,mm]=String(time||'00:00').split(':').map(Number);return new Date(y,m-1,d,hh||0,mm||0,0,0)}
+function reminderKey(d){return `${d.getFullYear()}-${String(d.getMonth()+1).padStart(2,'0')}-${String(d.getDate()).padStart(2,'0')} ${String(d.getHours()).padStart(2,'0')}:${String(d.getMinutes()).padStart(2,'0')}`}
+function reminderOccurrence(r,now=new Date()){
+ if(!r?.enabled)return null;let f=r.frequency||'once',t=r.time||'09:00',start=r.startDate?new Date(r.startDate+'T00:00:00'):null;if(start&&!Number.isNaN(start.getTime())&&now<start)return null;
+ if(f==='once'){let d=reminderDateTime(r.date||'',t);return d&&d<=now?d:null}
+ if(f==='daily'){let d=new Date(now.getFullYear(),now.getMonth(),now.getDate(),...(t.split(':').map(Number)),0);return d<=now?d:null}
+ if(f==='weekly'){let days=Array.isArray(r.days)?r.days.map(Number):[];if(!days.length)return null;let start=new Date(now.getFullYear(),now.getMonth(),now.getDate());for(let i=0;i<7;i++){let d=new Date(start);d.setDate(start.getDate()-i);if(days.includes(d.getDay())){let [hh,mm]=t.split(':').map(Number);d.setHours(hh||0,mm||0,0,0);if(d<=now)return d}}return null}
+ if(f==='monthly'){let target=Math.max(1,Math.min(31,Number(r.monthDay)||1));let y=now.getFullYear(),m=now.getMonth(),last=new Date(y,m+1,0).getDate();let day=Math.min(target,last);let [hh,mm]=t.split(':').map(Number);let d=new Date(y,m,day,hh||0,mm||0,0,0);if(d>now){let pm=m-1,py=y;if(pm<0){pm=11;py--}last=new Date(py,pm+1,0).getDate();d=new Date(py,pm,Math.min(target,last),hh||0,mm||0,0,0)}return d<=now?d:null}
+ return null
+}
+function dueReminderForNote(n,now=new Date()){let r=n.recordatorio;if(!r?.enabled)return null;if(r.pendingKey){let pendingDate=new Date(r.pendingKey.replace(' ','T'));if(!Number.isNaN(pendingDate.getTime())&&pendingDate<=now)return {note:n,occ:pendingDate,key:r.pendingKey}}let occ=reminderOccurrence(r,now);if(!occ)return null;let key=reminderKey(occ);if(r.lastCompletedKey===key)return null;r.pendingKey=key;return {note:n,occ,key}}
+function completeReminder(id){let n=db.notas.find(x=>x.id===id);if(!n?.recordatorio?.enabled)return;let key=n.recordatorio.pendingKey||reminderKey(new Date());n.recordatorio.lastCompletedKey=key;n.recordatorio.pendingKey='';autoSave().then(()=>{renderReminderArea();renderNotas()})}
+function renderReminderArea(){let area=$('reminderArea');if(!area)return;let due=db.notas.map(n=>dueReminderForNote(n)).filter(Boolean).sort((a,b)=>a.occ-b.occ);if(!due.length){area.classList.remove('open');area.innerHTML='';return}area.classList.add('open');area.innerHTML=due.map(d=>`<div class="reminder-alert"><div class="reminder-row"><div><h3>🔔 RECORDATORIO PENDIENTE</h3><div><b>${esc(d.note.texto||'Nota')}</b></div><div style="margin-top:4px;font-size:12px">${esc(d.note.persona||'Sin persona / empresa')} · ${d.key}</div></div><span style="font-size:22px">⏰</span></div><div class="reminder-actions"><button class="reminder-complete" onclick="completeReminder('${d.note.id}')">✓ Marcar como cumplido</button><button class="reminder-open-note" onclick="openPage('notas');editNota('${d.note.id}')">📝 Ver nota</button></div></div>`).join('')}
+function updateReminderFields(){let type=$('notaTipo').value,isNote=type==='nota';$('reminderSettings').hidden=!isNote;if(!isNote){$('notaRecordatorio').checked=false;$('reminderOptions').hidden=true;return}let on=$('notaRecordatorio').checked;$('reminderOptions').hidden=!on;if(!on)return;let f=$('reminderFrequency').value;$('reminderDateWrap').hidden=f!=='once';$('weeklyDaysWrap').hidden=f!=='weekly';$('monthlyDayWrap').hidden=f!=='monthly'}
+function loadNotaReminder(r){let enabled=!!r?.enabled;$('notaRecordatorio').checked=enabled;$('reminderFrequency').value=r?.frequency||'once';$('reminderDate').value=r?.date||today();$('reminderTime').value=r?.time||'09:00';$('reminderMonthDay').value=r?.monthDay||1;document.querySelectorAll('.reminder-weekday').forEach(c=>c.checked=Array.isArray(r?.days)&&r.days.map(Number).includes(Number(c.value)));updateReminderFields()}
+function collectNotaReminder(old){if($('notaTipo').value!=='nota'||!$('notaRecordatorio').checked)return null;let f=$('reminderFrequency').value,r={enabled:true,frequency:f,date:f==='once'?$('reminderDate').value:'',startDate:old?.recordatorio?.startDate||today(),time:$('reminderTime').value||'09:00',days:f==='weekly'?[...document.querySelectorAll('.reminder-weekday:checked')].map(c=>Number(c.value)):[],monthDay:f==='monthly'?Math.max(1,Math.min(31,Number($('reminderMonthDay').value)||1)):null,lastCompletedKey:old?.recordatorio?.lastCompletedKey||'',pendingKey:old?.recordatorio?.pendingKey||''};if(f==='once'&&!r.date){alert('Selecciona la fecha del recordatorio.');return undefined}if(f==='weekly'&&!r.days.length){alert('Selecciona al menos un día de la semana.');return undefined}return r}
+function resetNota(){$('notaId').value='';$('notaTipo').value='debo';$('notaPersona').value='';$('notaFecha').value=today();$('notaValor').value='';$('notaTexto').value='';loadNotaReminder(null);$('notaCancel').hidden=true}
+function editNota(id){let x=db.notas.find(a=>a.id===id);if(!x)return;openPage('notas');$('notaId').value=x.id;$('notaTipo').value=x.tipo||'nota';$('notaPersona').value=x.persona||'';$('notaFecha').value=x.fecha||today();$('notaValor').value=x.valor?new Intl.NumberFormat('es-CO').format(x.valor):'';$('notaTexto').value=x.texto||'';loadNotaReminder(x.recordatorio);$('notaCancel').hidden=false;window.scrollTo({top:0,behavior:'smooth'})}
+function renderNotas(){let q=normalizeSearch($('notesSearch')?.value||'');let rows=db.notas.slice().sort((a,b)=>(b.createdAt||0)-(a.createdAt||0)).filter(x=>!q||normalizeSearch([x.persona,x.texto,x.tipo].join(' ')).includes(q));let debt=rows.filter(x=>x.tipo==='debo').reduce((a,x)=>a+(Number(x.valor)||0),0);let recv=rows.filter(x=>x.tipo==='deben').reduce((a,x)=>a+(Number(x.valor)||0),0);$('notesDebtTotal').textContent=money(debt);$('notesReceivableTotal').textContent=money(recv);let bal=recv-debt;$('notesBalanceTotal').textContent=money(bal);$('notesBalanceTotal').className=bal<0?'note-debt':bal>0?'note-receivable':'';$('notesBody').innerHTML=rows.length?rows.map(x=>`<tr><td>${fmtDate(x.fecha)}</td><td><span class="badge ${x.tipo==='debo'?'b-exp':x.tipo==='deben'?'b-sale':'b-doc'}">${x.tipo==='debo'?'🔴 Yo debo':x.tipo==='deben'?'🟢 Me deben':'📝 Nota'}</span></td><td>${esc(x.persona||'—')}</td><td>${esc(x.texto)}</td><td class="right">${money(x.valor)}</td><td><button class="btn secondary" onclick="editNota('${x.id}')">✏️</button> <button class="btn danger" onclick="deleteItem('nota','${x.id}')">🗑️</button></td></tr>`).join(''):'<tr><td colspan="6" class="empty">No hay notas registradas con ese filtro.</td></tr>'}
+$('notaForm').onsubmit=async e=>{e.preventDefault();let id=$('notaId').value,old=db.notas.find(x=>x.id===id),rem=collectNotaReminder(old);if(rem===undefined)return;let x={id:id||crypto.randomUUID(),tipo:$('notaTipo').value,persona:$('notaPersona').value.trim(),fecha:$('notaFecha').value,valor:numValue($('notaValor').value),texto:$('notaTexto').value.trim(),recordatorio:rem,createdAt:old?.createdAt||nowStamp()};if(!x.texto)return;if(old)Object.assign(old,x);else db.notas.unshift(x);await autoSave();resetNota();renderAll();openPage('notas')}
+$('notaCancel').onclick=()=>{resetNota();renderNotas()}
+$('notesSearch').addEventListener('input',renderNotas)
+$('notaTipo').addEventListener('change',updateReminderFields);$('notaRecordatorio').addEventListener('change',updateReminderFields);$('reminderFrequency').addEventListener('change',updateReminderFields);
+function renderAll(){loadConfig();populateInvSelect();renderToday();renderMovements();renderInventory();renderNotas();renderDocs();renderReminderArea()}
+setInterval(renderReminderArea,30000);window.addEventListener('online',()=>{if(driveConfigured())saveDriveNow(false)});setInterval(()=>{if(driveConfigured()&&!driveSyncBusy&&Number(db._meta?.updatedAt)>0)saveDriveNow(false)},60000);document.addEventListener('visibilitychange',()=>{if(!document.hidden){renderReminderArea();if(driveConfigured())saveDriveNow(false)}});
+async function load(){
+  await loadBrowser();
+  setupDocumentWorkspace();
+  $('ventaFecha').value=today();
+  $('gastoFecha').value=today();
+  $('notaFecha').value=today();
+  loadNotaReminder(null);
+  renderAll();
+  await restoreConnectedFile();
+  renderAll();
+  if(driveConfigured()){
+    await loadDriveRemote('startup');
+    driveStartupChecked=true;
+  }
+  renderReminderArea()
+}
+load();
+</script>
+<script>
+if ('serviceWorker' in navigator && (location.protocol === 'http:' || location.protocol === 'https:')) {
+  window.addEventListener('load', () => navigator.serviceWorker.register('./sw.js').catch(()=>{}));
+}
+</script>
+</body>
+</html>

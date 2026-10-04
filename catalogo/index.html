@@ -1,0 +1,55 @@
+<!doctype html>
+<html lang="es">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width,initial-scale=1,viewport-fit=cover">
+<meta name="theme-color" content="#111827">
+<meta name="description" content="Catálogo público de productos">
+<link rel="manifest" href="manifest.webmanifest">
+<title>Catálogo</title>
+<style>
+:root{--bg:#f4f7fb;--card:#fff;--text:#172033;--muted:#667085;--line:#e4e7ec;--blue:#2563eb;--shadow:0 8px 28px rgba(16,24,40,.08)}
+*{box-sizing:border-box}body{margin:0;background:var(--bg);color:var(--text);font-family:Inter,system-ui,-apple-system,BlinkMacSystemFont,"Segoe UI",sans-serif}
+.wrap{max-width:1100px;margin:auto;padding:18px 14px 42px}.head{background:var(--card);border:1px solid var(--line);border-radius:20px;padding:20px;margin-bottom:16px;box-shadow:var(--shadow)}
+.head-row{display:flex;align-items:center;justify-content:space-between;gap:12px}.head h1{margin:0 0 5px;font-size:28px}.head p{margin:0;color:var(--muted)}
+.status{margin-top:13px;font-size:12px;color:var(--muted);display:flex;gap:8px;align-items:center}.dot{width:9px;height:9px;border-radius:50%;background:#94a3b8}.dot.online{background:#16a34a}.dot.offline{background:#ea580c}
+.grid{display:grid;grid-template-columns:repeat(auto-fill,minmax(220px,1fr));gap:16px}.product{background:var(--card);border:1px solid var(--line);border-radius:18px;overflow:hidden;box-shadow:var(--shadow)}
+.product img,.no-photo{display:block;width:100%;height:210px;object-fit:cover;background:#eef2f6}.no-photo{display:flex;align-items:center;justify-content:center;color:var(--muted)}
+.body{padding:15px}.body h2{font-size:18px;margin:0 0 9px}.price{font-size:23px;font-weight:850}.stock{margin-top:7px;color:var(--muted);font-size:13px}.stock.zero{color:#b45309;font-weight:700}
+.empty{background:var(--card);padding:38px;text-align:center;border-radius:18px;color:var(--muted);border:1px solid var(--line)}
+.foot{text-align:center;color:#98a2b3;font-size:12px;margin-top:18px}.error{background:#fff7ed;color:#9a3412;border:1px solid #fed7aa;padding:12px;border-radius:12px;margin-bottom:15px;display:none}
+@media(max-width:520px){.wrap{padding:12px 10px 30px}.head h1{font-size:23px}.grid{grid-template-columns:repeat(2,minmax(0,1fr));gap:10px}.product img,.no-photo{height:150px}.body{padding:11px}.body h2{font-size:15px}.price{font-size:19px}.stock{font-size:12px}}
+</style>
+</head>
+<body>
+<main class="wrap">
+<header class="head"><div class="head-row"><div><h1 id="businessName">Catálogo</h1><p>Productos · Precio de venta por unidad</p></div></div><div class="status"><span id="statusDot" class="dot"></span><span id="statusText">Cargando catálogo…</span></div></header>
+<div id="error" class="error"></div>
+<section id="grid" class="grid"></section>
+<div id="foot" class="foot"></div>
+</main>
+<script>
+const CACHE_KEY='catalogo_publico_cache_v1';
+const params=new URLSearchParams(location.search);
+const key=params.get('key')||'';
+const api=params.get('api')||'';
+const $=id=>document.getElementById(id);
+function money(n){return '$ '+new Intl.NumberFormat('es-CO',{maximumFractionDigits:0}).format(Math.round(Number(n)||0))}
+function esc(s){return String(s??'').replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;').replace(/"/g,'&quot;').replace(/'/g,'&#39;')}
+function safeImage(s){return /^data:image\/(png|jpe?g|webp|gif);base64,[A-Za-z0-9+/=]+$/i.test(String(s||''))||/^https:\/\//i.test(String(s||''))?s:''}
+function setStatus(online,text){$('statusDot').className='dot '+(online?'online':'offline');$('statusText').textContent=text}
+function render(data,source){const products=Array.isArray(data?.products)?data.products:[];$('businessName').textContent=data?.businessName||'Catálogo';$('grid').innerHTML=products.length?products.map(p=>{const img=safeImage(p.foto);const stock=Math.max(0,Number(p.stock)||0);return `<article class="product">${img?`<img loading="lazy" src="${esc(img)}" alt="${esc(p.nombre)}">`:'<div class="no-photo">Sin foto</div>'}<div class="body"><h2>${esc(p.nombre||'Producto')}</h2><div class="price">${money(p.precio)}</div><div class="stock ${stock===0?'zero':''}">${stock===0?'Sin stock disponible':'Stock disponible: '+stock}</div></div></article>`}).join(''):'<div class="empty" style="grid-column:1/-1">No hay productos registrados.</div>';$('foot').textContent='Última actualización: '+(data?.updatedAt?new Date(Number(data.updatedAt)).toLocaleString('es-CO'):'—')+(source==='cache'?' · datos guardados en este dispositivo':'')}
+function loadCache(){try{const x=JSON.parse(localStorage.getItem(CACHE_KEY)||'null');if(x){render(x,'cache');setStatus(false,'Sin internet · mostrando el último catálogo guardado');return true}}catch(e){}return false}
+function saveCache(data){try{localStorage.setItem(CACHE_KEY,JSON.stringify(data))}catch(e){}}
+function jsonp(url,timeout=15000){return new Promise((resolve,reject)=>{const cb='catCb_'+Date.now()+'_'+Math.random().toString(36).slice(2);let done=false;const script=document.createElement('script');const timer=setTimeout(()=>finish(new Error('Tiempo de espera agotado')),timeout);function cleanup(){clearTimeout(timer);delete window[cb];script.remove()}function finish(err,data){if(done)return;done=true;cleanup();err?reject(err):resolve(data)}window[cb]=data=>finish(null,data);script.onerror=()=>finish(new Error('No se pudo consultar el catálogo'));script.src=url+(url.includes('?')?'&':'?')+'prefix='+encodeURIComponent(cb);document.head.appendChild(script)})}
+async function refresh(){
+ if(!key||!api){$('error').style.display='block';$('error').textContent='Este enlace de catálogo está incompleto. Genera nuevamente el enlace desde Control de Negocio.';setStatus(false,'Enlace incompleto');return}
+ try{const u=new URL(api);if(u.protocol!=='https:')throw new Error('La conexión del catálogo debe usar HTTPS');const data=await jsonp(u.href+'?action=catalogData&key='+encodeURIComponent(key));if(!data?.ok)throw new Error(data?.error||'No se pudo cargar el catálogo');saveCache(data);render(data,'online');setStatus(true,'Online · catálogo actualizado');$('error').style.display='none'}catch(e){if(!loadCache()){$('error').style.display='block';$('error').textContent='No se pudo cargar el catálogo. Abre este enlace una vez con internet para guardarlo en este dispositivo.';setStatus(false,'Sin conexión')}}
+}
+if('serviceWorker' in navigator){window.addEventListener('load',()=>navigator.serviceWorker.register('./sw.js').catch(()=>{}))}
+if(!loadCache())setStatus(false,'Cargando catálogo…');
+refresh();
+window.addEventListener('online',refresh);window.addEventListener('offline',()=>{setStatus(false,'Sin internet · mostrando el último catálogo guardado');loadCache()});
+</script>
+</body>
+</html>
