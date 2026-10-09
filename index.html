@@ -159,7 +159,7 @@ input[type=file]{padding:8px}textarea{min-height:90px;resize:vertical}
 <div><label>Dirección</label><input id="cfgAddress"></div><div><label>Ciudad</label><input id="cfgCity" placeholder="Medellín"></div>
 </div><div style="margin-top:12px"><img id="logoPreview" class="logo-preview" alt="Vista previa del logo"></div><div class="actions"><button class="btn primary" id="saveConfig" type="button">💾 Guardar identidad</button></div></div>
 <div class="card"><h2>💾 Archivo de datos</h2><p class="muted">La información se guarda automáticamente en el navegador y, si conectas un archivo local, también se escribe en ese archivo después de cada cambio.</p><div class="actions"><button class="btn primary" id="connectFile" type="button">📁 Conectar / crear archivo</button><button class="btn secondary" id="saveFileNow" type="button">💾 Guardar archivo ahora</button><button class="btn secondary" id="importFileBtn" type="button">⬆️ Importar archivo</button><input id="importFile" type="file" accept=".json" hidden></div><p id="fileHelp" class="muted"></p></div>
-<div class="card"><h2>☁️ Google Drive + Apps Script</h2><p class="muted">El guardado local sigue funcionando igual. Cada cambio se guarda primero en este dispositivo y luego se sincroniza con Google Drive. PC y celular usan la misma base en Drive. Antes de guardar se comprueban los cambios nuevos, se combinan registros independientes y se bloquean los conflictos. Sin Internet los cambios quedan pendientes localmente. Configura la misma URL y token en cada dispositivo una sola vez.</p><div class="grid"><div><label>URL de la aplicación web de Apps Script</label><input id="cfgDriveUrl" placeholder="https://script.google.com/macros/s/…/exec" autocomplete="off"></div><div><label>Token secreto</label><input id="cfgDriveToken" type="password" placeholder="El mismo token del Apps Script" autocomplete="off"></div></div><div class="actions" style="margin-top:12px"><button class="btn primary" id="saveDriveConfig" type="button">☁️ Guardar conexión Drive</button><button class="btn secondary" id="syncDriveNow" type="button">🔄 Sincronizar ahora</button><button class="btn secondary" id="restoreDriveNow" type="button">🔎 Revisar diferencias</button><button class="btn secondary" id="backupBeforeResolve" type="button">⬇️ Respaldo local JSON</button></div><p id="driveState" class="muted">No configurado</p><p class="muted">Importante: despliega Apps Script como aplicación web. El script puente se entrega junto con este archivo.</p></div>
+<div class="card"><h2>☁️ Google Drive + Apps Script</h2><p class="muted">El guardado local sigue funcionando igual. Cada cambio se guarda primero en este dispositivo y luego se sincroniza con Google Drive. PC y celular usan la misma base en Drive. Antes de guardar se comprueban los cambios nuevos, se combinan registros independientes y se bloquean los conflictos. Sin Internet los cambios quedan pendientes localmente. Configura la misma URL y token en cada dispositivo una sola vez.</p><div class="grid"><div><label>URL de la aplicación web de Apps Script</label><input id="cfgDriveUrl" placeholder="https://script.google.com/macros/s/…/exec" autocomplete="off"></div><div><label>Token secreto</label><input id="cfgDriveToken" type="password" placeholder="El mismo token del Apps Script" autocomplete="off"></div></div><div class="actions" style="margin-top:12px"><button class="btn primary" id="saveDriveConfig" type="button">☁️ Guardar conexión Drive</button><button class="btn secondary" id="syncDriveNow" type="button">🔄 Sincronizar ahora</button><button class="btn secondary" id="restoreDriveNow" type="button">🔎 Revisar diferencias</button><button class="btn secondary" id="backupBeforeResolve" type="button">⬇️ Respaldo local JSON</button></div><p id="driveState" class="muted">No configurado</p><p class="muted">Importante: despliega Apps Script como aplicación web. Para dispositivos móviles se necesita Apps Script V25 (lectura por partes). El puente se entrega junto con este archivo.</p></div>
 </section>
 </main>
 
@@ -195,7 +195,7 @@ let stateDb=null;
 function openStateDB(){return new Promise((resolve,reject)=>{if(stateDb)return resolve(stateDb);let r=indexedDB.open('control_negocio_state_v8',1);r.onupgradeneeded=()=>{if(!r.result.objectStoreNames.contains('state'))r.result.createObjectStore('state')};r.onsuccess=()=>{stateDb=r.result;resolve(stateDb)};r.onerror=()=>reject(r.error)})}
 async function persistBrowser(){try{let d=await openStateDB();await new Promise((res,rej)=>{let tx=d.transaction('state','readwrite');tx.objectStore('state').put(db,'data');tx.oncomplete=res;tx.onerror=()=>rej(tx.error)});$('saveState').textContent='✓ Guardado automáticamente · '+new Date().toLocaleTimeString('es-CO',{hour:'2-digit',minute:'2-digit'});return true}catch(e){try{localStorage.setItem(KEY,JSON.stringify(db));$('saveState').textContent='✓ Guardado local · '+new Date().toLocaleTimeString('es-CO',{hour:'2-digit',minute:'2-digit'});return true}catch(err){$('saveState').textContent='⚠️ No se pudo guardar';return false}}}
 async function loadBrowser(){try{let d=await openStateDB();let x=await new Promise((res,rej)=>{let q=d.transaction('state','readonly').objectStore('state').get('data');q.onsuccess=()=>res(q.result);q.onerror=()=>rej(q.error)});if(x){db=normalize(x);return}}catch(e){}try{let x=JSON.parse(localStorage.getItem(KEY));if(x)db=normalize(x)}catch(e){}}
-// V24: sincronización con revisión del servidor y fusión en tres vías.
+// V25: sincronización con revisión del servidor y fusión en tres vías.
 const SYNC_COLLECTIONS=['ventas','gastos','inventario','documentos','notas'];
 const PRIVATE_CONFIG_KEYS=['driveScriptUrl','driveToken'];
 let driveSyncTimer=null,driveSyncBusy=false,driveSyncQueued=false,driveConflict=false,driveSyncBase=null;
@@ -263,9 +263,92 @@ function postDriveForm(payload){return new Promise((resolve,reject)=>{try{
   const add=(name,value)=>{const input=document.createElement('input');input.type='hidden';input.name=name;input.value=String(value);form.appendChild(input)};
   add('action','save');add('token',payload.token);add('data',JSON.stringify(payload.data));add('baseRevision',payload.baseRevision);add('writeId',payload.writeId);document.body.appendChild(form);form.submit();setTimeout(()=>{form.remove();resolve(true)},350)
 }catch(e){reject(e)}})}
-async function readDrive(){const r=await jsonp(driveUrl()+'?action=load&token='+encodeURIComponent(db.config.driveToken));if(!r?.ok||!r.data)throw new Error(r?.error||'No se pudo leer el archivo de Drive');if(!Number.isInteger(Number(r.data._meta?.revision)))throw new Error('Actualiza el Apps Script al puente V24 antes de sincronizar. No se ha enviado ningún dato.');return r.data}
+// V25: carga segura con diagnóstico y alternativa por bloques para navegadores móviles.
+let preferSmallDriveChunks=false;
+function driveApi(action,params={}){
+  const u=new URL(driveUrl());
+  u.search='';
+  u.searchParams.set('action',action);
+  u.searchParams.set('token',db.config.driveToken);
+  for(const [name,value] of Object.entries(params))u.searchParams.set(name,String(value));
+  return u.toString();
+}
+function driveApiError(stage,error){
+  const msg=String(error?.message||error||'No se recibió respuesta');
+  if(msg.includes('No autorizado'))return new Error('Token de Apps Script no autorizado. Confirma el mismo token del PC.');
+  if(msg.includes('No se pudo consultar')||msg.includes('Tiempo de espera')){
+    return new Error('Falló la consulta '+stage+' desde el navegador. Verifica la URL /exec, que Google Apps Script esté publicado para «Cualquier persona», y que Chrome no bloquee los scripts externos. Detalle: '+msg);
+  }
+  return new Error(stage+': '+msg);
+}
+async function driveStatus(){
+  let status;
+  try{status=await jsonp(driveApi('status'),30000)}catch(e){throw driveApiError('de estado',e)}
+  if(!status?.ok)throw driveApiError('de estado',status?.error||'Respuesta inesperada');
+  if(!Number.isInteger(Number(status.revision)))throw new Error('El puente de Apps Script no informa la revisión. Publica Apps Script V25.');
+  return status;
+}
+async function readDriveInChunks(expectedRevision){
+  // Los bloques pequeños evitan transferir todas las fotos como un único script gigante.
+  const blockSize=100000;
+  let head;
+  try{head=await jsonp(driveApi('loadChunk',{offset:0,length:blockSize}),35000)}
+  catch(e){throw driveApiError('por partes (bloque inicial)',e)}
+  if(!head?.ok||typeof head.chunk!=='string')throw new Error('El servidor no admite carga por partes. Instala el puente Apps Script V25 y publica una NUEVA versión. '+String(head?.error||''));
+  const total=Number(head.total),rev=Number(head.revision);
+  if(!Number.isSafeInteger(total)||total<2||total>100000000)throw new Error('Tamaño de archivo no válido. No se modificaron tus datos.');
+  if(rev!==Number(expectedRevision))throw new Error('Drive cambió durante la descarga. Reintenta para evitar mezclar versiones.');
+  if(head.offset!==0||head.chunk.length!==Math.min(blockSize,total))throw new Error('Primer bloque incompleto. No se modificaron tus datos.');
+  const count=Math.ceil(total/blockSize),parts=Array(count);
+  parts[0]=head.chunk;
+  for(let i=1;i<count;i+=3){
+    const indices=Array.from({length:Math.min(3,count-i)},(_,j)=>i+j);
+    const loaded=await Promise.all(indices.map(async n=>{
+      let ans;
+      try{ans=await jsonp(driveApi('loadChunk',{offset:n*blockSize,length:blockSize}),35000)}
+      catch(e){throw driveApiError('por partes (bloque '+(n+1)+')',e)}
+      const expectedLength=Math.min(blockSize,total-n*blockSize);
+      if(!ans?.ok||ans.offset!==n*blockSize||ans.total!==total||Number(ans.revision)!==rev||typeof ans.chunk!=='string'||ans.chunk.length!==expectedLength){
+        throw new Error('Drive cambió o devolvió un bloque incompleto. Reintenta; tus datos locales siguen intactos.');
+      }
+      return [n,ans.chunk];
+    }));
+    for(const [n,chunk] of loaded)parts[n]=chunk;
+    setDriveState('descargando datos '+Math.min(i+3,count)+'/'+count+'…');
+  }
+  const check=await driveStatus();
+  if(Number(check.revision)!==rev)throw new Error('Drive cambió durante la descarga. Reintenta la sincronización.');
+  let data;
+  try{data=JSON.parse(parts.join(''))}catch(e){throw new Error('Los bloques no formaron un JSON válido. No se modificaron tus datos.');}
+  data._meta=data._meta||{};
+  if(data._meta.revision!==undefined&&Number(data._meta.revision)!==rev)throw new Error('La revisión descargada no coincide con Drive. Reintenta.');
+  data._meta.revision=rev;
+  return data;
+}
+async function readDrive(){
+  const status=await driveStatus();
+  const revision=Number(status.revision);
+  if(preferSmallDriveChunks||Number(status.sizeChars)>450000){
+    preferSmallDriveChunks=true;
+    return readDriveInChunks(revision);
+  }
+  try{
+    const ans=await jsonp(driveApi('load'),45000);
+    if(!ans?.ok||!ans.data)throw new Error(ans?.error||'No se pudo leer el archivo de Drive');
+    if(!Number.isInteger(Number(ans.data._meta?.revision)))throw new Error('Actualiza Apps Script al puente V25. No se ha enviado ningún dato.');
+    if(Number(ans.data._meta.revision)!==revision)throw new Error('Drive cambió durante la descarga. Reintenta.');
+    return ans.data;
+  }catch(e){
+    // Un error de autorización o de revisión no debe ocultarse con el modo por partes.
+    if(!/No se pudo consultar|Tiempo de espera|Script error|NetworkError/i.test(String(e?.message||'')))throw e;
+    setDriveState('probando descarga por partes…');
+    const data=await readDriveInChunks(revision);
+    preferSmallDriveChunks=true;
+    return data;
+  }
+}
 async function confirmDriveWrite(writeId,expectedRevision){for(let i=0;i<12;i++){
-  try{const st=await jsonp(driveUrl()+'?action=status&token='+encodeURIComponent(db.config.driveToken));if(st?.ok){if(st.lastWriteId===writeId&&Number(st.revision)===expectedRevision)return st;if(Number(st.revision)>expectedRevision||Number(st.revision)===expectedRevision&&st.lastWriteId!==writeId)throw new Error('Otro dispositivo modificó Drive: se volverá a comparar sin sobrescribirlo.')}}
+  try{const st=await jsonp(driveApi('status'),30000);if(st?.ok){if(st.lastWriteId===writeId&&Number(st.revision)===expectedRevision)return st;if(Number(st.revision)>expectedRevision||Number(st.revision)===expectedRevision&&st.lastWriteId!==writeId)throw new Error('Otro dispositivo modificó Drive: se volverá a comparar sin sobrescribirlo.')}}
   catch(e){if(String(e.message||'').includes('Otro dispositivo'))throw e}
   await new Promise(r=>setTimeout(r,850));
 }throw new Error('No se pudo confirmar el guardado. Se conservarán los datos locales hasta comprobar Drive.')}
@@ -460,7 +543,7 @@ function applyBusinessName(){let n=(db.config.name||'Control de Negocio').trim()
 $('saveConfig').onclick=async()=>{db.config.name=$('cfgName').value.trim()||'Control de Negocio';db.config.phone=$('cfgPhone').value.trim();db.config.instagram=$('cfgInstagram').value.trim();db.config.facebook=$('cfgFacebook').value.trim();db.config.email=$('cfgEmail').value.trim();db.config.address=$('cfgAddress').value.trim();db.config.city=$('cfgCity').value.trim();db.config.driveScriptUrl=$('cfgDriveUrl').value.trim();db.config.driveToken=$('cfgDriveToken').value.trim();applyBusinessName();await autoSave();renderAll();alert('Identidad y contacto guardados correctamente.')}
 $('saveDriveConfig').onclick=async()=>{
   const previous=driveUrl();
-  db.config.driveScriptUrl=$('cfgDriveUrl').value.trim().replace(/\/$/,'');
+  db.config.driveScriptUrl=$('cfgDriveUrl').value.trim().replace(/\/$/,'').replace(/\?action=status$/,'');
   db.config.driveToken=$('cfgDriveToken').value.trim();
   if(previous!==driveUrl())await clearSyncBase();
   driveConflict=false;await persistBrowser();
