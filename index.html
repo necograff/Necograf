@@ -159,7 +159,7 @@ input[type=file]{padding:8px}textarea{min-height:90px;resize:vertical}
 <div><label>Dirección</label><input id="cfgAddress"></div><div><label>Ciudad</label><input id="cfgCity" placeholder="Medellín"></div>
 </div><div style="margin-top:12px"><img id="logoPreview" class="logo-preview" alt="Vista previa del logo"></div><div class="actions"><button class="btn primary" id="saveConfig" type="button">💾 Guardar identidad</button></div></div>
 <div class="card"><h2>💾 Archivo de datos</h2><p class="muted">La información se guarda automáticamente en el navegador y, si conectas un archivo local, también se escribe en ese archivo después de cada cambio.</p><div class="actions"><button class="btn primary" id="connectFile" type="button">📁 Conectar / crear archivo</button><button class="btn secondary" id="saveFileNow" type="button">💾 Guardar archivo ahora</button><button class="btn secondary" id="importFileBtn" type="button">⬆️ Importar archivo</button><input id="importFile" type="file" accept=".json" hidden></div><p id="fileHelp" class="muted"></p></div>
-<div class="card"><h2>☁️ Google Drive + Apps Script</h2><p class="muted">El guardado local sigue funcionando igual. Cada cambio se guarda primero en este dispositivo y luego se sincroniza con Google Drive. PC y celular usan la misma base en Drive. Antes de guardar se comprueban los cambios nuevos, se combinan registros independientes y se bloquean los conflictos. Sin Internet los cambios quedan pendientes localmente. Configura la misma URL y token en cada dispositivo una sola vez.</p><div class="grid"><div><label>URL de la aplicación web de Apps Script</label><input id="cfgDriveUrl" placeholder="https://script.google.com/macros/s/…/exec" autocomplete="off"></div><div><label>Token secreto</label><input id="cfgDriveToken" type="password" placeholder="El mismo token del Apps Script" autocomplete="off"></div></div><div class="actions" style="margin-top:12px"><button class="btn primary" id="saveDriveConfig" type="button">☁️ Guardar conexión Drive</button><button class="btn secondary" id="syncDriveNow" type="button">🔄 Sincronizar ahora</button><button class="btn secondary" id="restoreDriveNow" type="button">🔎 Revisar diferencias</button><button class="btn secondary" id="backupBeforeResolve" type="button">⬇️ Respaldo local JSON</button></div><p id="driveState" class="muted">No configurado</p><p class="muted">Importante: despliega Apps Script como aplicación web. Para dispositivos móviles se necesita Apps Script V25 (o compatible) con lectura por partes. La V26 evita descargas repetidas si no hubo cambios. El puente se entrega junto con este archivo.</p></div>
+<div class="card"><h2>☁️ Google Drive + Apps Script</h2><p class="muted">El guardado local sigue funcionando igual. Cada cambio se guarda primero en este dispositivo y luego se sincroniza con Google Drive. PC y celular usan la misma base en Drive. Antes de guardar se comprueban los cambios nuevos, se combinan registros independientes y se bloquean los conflictos. Sin Internet los cambios quedan pendientes localmente. Configura la misma URL y token en cada dispositivo una sola vez.</p><div class="grid"><div><label>URL de la aplicación web de Apps Script</label><input id="cfgDriveUrl" placeholder="https://script.google.com/macros/s/…/exec" autocomplete="off"></div><div><label>Token secreto</label><input id="cfgDriveToken" type="password" placeholder="El mismo token del Apps Script" autocomplete="off"></div></div><div class="actions" style="margin-top:12px"><button class="btn primary" id="saveDriveConfig" type="button">☁️ Guardar conexión Drive</button><button class="btn secondary" id="syncDriveNow" type="button">🔄 Sincronizar ahora</button><button class="btn secondary" id="restoreDriveNow" type="button">🔎 Revisar diferencias</button><button class="btn secondary" id="backupBeforeResolve" type="button">⬇️ Respaldo local JSON</button></div><p id="driveState" class="muted">No configurado</p><p class="muted">Importante: despliega Apps Script como aplicación web. Para dispositivos móviles se necesita Apps Script V25 (o compatible) con lectura por partes. La V27 evita descargas repetidas y permite reintentar bloques que fallen. El puente se entrega junto con este archivo.</p></div>
 </section>
 </main>
 
@@ -264,7 +264,7 @@ function postDriveForm(payload){return new Promise((resolve,reject)=>{try{
   const add=(name,value)=>{const input=document.createElement('input');input.type='hidden';input.name=name;input.value=String(value);form.appendChild(input)};
   add('action','save');add('token',payload.token);add('data',JSON.stringify(payload.data));add('baseRevision',payload.baseRevision);add('writeId',payload.writeId);document.body.appendChild(form);form.submit();setTimeout(()=>{form.remove();resolve(true)},350)
 }catch(e){reject(e)}})}
-// V26: estado ligero; la carga por bloques solo se usa si la revisión cambió.
+// V27: estado ligero, reintentos de descarga y carga solo si cambia la revisión.
 let preferSmallDriveChunks=false;
 function driveApi(action,params={}){
   const u=new URL(driveUrl());
@@ -289,41 +289,87 @@ async function driveStatus(){
   if(!Number.isInteger(Number(status.revision)))throw new Error('El puente de Apps Script no informa la revisión. Publica Apps Script V25.');
   return status;
 }
+// V27: guarda solo en memoria los bloques de una descarga incompleta.
+// Se reutilizan unicamente si la revision y la URL de Drive no cambiaron.
+let drivePartialDownload=null;
+async function retryDriveChunk(offset,length,blockNumber,maxAttempts=3){
+  let lastError;
+  for(let attempt=1;attempt<=maxAttempts;attempt++){
+    try{
+      const answer=await jsonp(driveApi('loadChunk',{offset,length}),45000);
+      if(!answer?.ok)throw new Error(String(answer?.error||'Apps Script rechazó el bloque'));
+      return answer;
+    }catch(err){
+      lastError=err;
+      // No repetir respuestas explicitamente rechazadas por el servidor.
+      const message=String(err?.message||err);
+      const transient=/No se pudo consultar|Tiempo de espera|NetworkError|Script error/i.test(message);
+      if(!transient||attempt===maxAttempts)break;
+      setDriveState('reintentando bloque '+blockNumber+' (intento '+(attempt+1)+'/'+maxAttempts+')…');
+      await new Promise(resolve=>setTimeout(resolve,800*attempt));
+    }
+  }
+  throw driveApiError('por partes (bloque '+blockNumber+')',lastError);
+}
 async function readDriveInChunks(expectedRevision){
-  // Los bloques pequeños evitan transferir todas las fotos como un único script gigante.
   const blockSize=100000;
-  let head;
-  try{head=await jsonp(driveApi('loadChunk',{offset:0,length:blockSize}),35000)}
-  catch(e){throw driveApiError('por partes (bloque inicial)',e)}
-  if(!head?.ok||typeof head.chunk!=='string')throw new Error('El servidor no admite carga por partes. Instala el puente Apps Script V25 y publica una NUEVA versión. '+String(head?.error||''));
-  const total=Number(head.total),rev=Number(head.revision);
-  if(!Number.isSafeInteger(total)||total<2||total>100000000)throw new Error('Tamaño de archivo no válido. No se modificaron tus datos.');
-  if(rev!==Number(expectedRevision))throw new Error('Drive cambió durante la descarga. Reintenta para evitar mezclar versiones.');
-  if(head.offset!==0||head.chunk.length!==Math.min(blockSize,total))throw new Error('Primer bloque incompleto. No se modificaron tus datos.');
-  const count=Math.ceil(total/blockSize),parts=Array(count);
-  parts[0]=head.chunk;
-  for(let i=1;i<count;i+=3){
-    const indices=Array.from({length:Math.min(3,count-i)},(_,j)=>i+j);
-    const loaded=await Promise.all(indices.map(async n=>{
-      let ans;
-      try{ans=await jsonp(driveApi('loadChunk',{offset:n*blockSize,length:blockSize}),35000)}
-      catch(e){throw driveApiError('por partes (bloque '+(n+1)+')',e)}
-      const expectedLength=Math.min(blockSize,total-n*blockSize);
-      if(!ans?.ok||ans.offset!==n*blockSize||ans.total!==total||Number(ans.revision)!==rev||typeof ans.chunk!=='string'||ans.chunk.length!==expectedLength){
-        throw new Error('Drive cambió o devolvió un bloque incompleto. Reintenta; tus datos locales siguen intactos.');
-      }
-      return [n,ans.chunk];
-    }));
-    for(const [n,chunk] of loaded)parts[n]=chunk;
-    setDriveState('descargando datos '+Math.min(i+3,count)+'/'+count+'…');
+  const endpoint=driveUrl();
+  const old=drivePartialDownload;
+  const reused=old?.endpoint===endpoint&&old.revision===Number(expectedRevision)&&old.blockSize===blockSize;
+  if(!reused)drivePartialDownload=null;
+  let total,rev,parts;
+  if(reused){
+    total=old.total;rev=old.revision;parts=old.parts;
+    setDriveState('reanudando descarga desde bloques guardados…');
+  }else{
+    const head=await retryDriveChunk(0,blockSize,1);
+    total=Number(head.total);rev=Number(head.revision);
+    if(!Number.isSafeInteger(total)||total<2||total>100000000)throw new Error('Tamaño de archivo no válido. No se modificaron tus datos.');
+    if(rev!==Number(expectedRevision))throw new Error('Drive cambió durante la descarga. Reintenta para evitar mezclar versiones.');
+    if(head.offset!==0||typeof head.chunk!=='string'||head.chunk.length!==Math.min(blockSize,total))throw new Error('Primer bloque incompleto. No se modificaron tus datos.');
+    parts=Array(Math.ceil(total/blockSize));parts[0]=head.chunk;
+    drivePartialDownload={endpoint,revision:rev,blockSize,total,parts};
+  }
+  if(rev!==Number(expectedRevision)){
+    drivePartialDownload=null;
+    throw new Error('Drive cambió durante la descarga. No se mezclaron versiones.');
+  }
+  const count=parts.length;
+  // Evitar tres lecturas simultaneas de un archivo grande en Apps Script.
+  // Dos solicitudes son mas tolerantes a limites temporales del servicio.
+  for(let i=0;i<count;i+=2){
+    const missing=[];
+    for(let n=i;n<Math.min(i+2,count);n++)if(typeof parts[n]!=='string')missing.push(n);
+    if(missing.length){
+      const results=await Promise.all(missing.map(async n=>{
+        const ans=await retryDriveChunk(n*blockSize,blockSize,n+1);
+        const expectedLength=Math.min(blockSize,total-n*blockSize);
+        if(ans.offset!==n*blockSize||Number(ans.total)!==total||Number(ans.revision)!==rev||typeof ans.chunk!=='string'||ans.chunk.length!==expectedLength){
+          drivePartialDownload=null;
+          throw new Error('Drive cambió o devolvió un bloque incompleto. No se modificaron los datos locales.');
+        }
+        // Conservar cada parte exitosa incluso si otra solicitud falla.
+        parts[n]=ans.chunk;
+        return n;
+      }));
+      void results;
+    }
+    setDriveState('descargando datos '+Math.min(i+2,count)+'/'+count+'…');
   }
   const check=await driveStatus();
-  if(Number(check.revision)!==rev)throw new Error('Drive cambió durante la descarga. Reintenta la sincronización.');
+  if(Number(check.revision)!==rev){
+    drivePartialDownload=null;
+    throw new Error('Drive cambió durante la descarga. Reintenta la sincronización.');
+  }
   let data;
-  try{data=JSON.parse(parts.join(''))}catch(e){throw new Error('Los bloques no formaron un JSON válido. No se modificaron tus datos.');}
-  data._meta=data._meta||{};
-  if(data._meta.revision!==undefined&&Number(data._meta.revision)!==rev)throw new Error('La revisión descargada no coincide con Drive. Reintenta.');
-  data._meta.revision=rev;
+  try{data=JSON.parse(parts.join(''))}
+  catch(e){drivePartialDownload=null;throw new Error('Los bloques no formaron un JSON válido. No se modificaron tus datos.');}
+  if(data._meta?.revision!==undefined&&Number(data._meta.revision)!==rev){
+    drivePartialDownload=null;
+    throw new Error('La revisión descargada no coincide con Drive. Reintenta.');
+  }
+  data._meta=data._meta||{};data._meta.revision=rev;
+  drivePartialDownload=null;
   return data;
 }
 async function readDrive(knownStatus=null){
