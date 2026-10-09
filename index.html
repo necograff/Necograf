@@ -159,7 +159,7 @@ input[type=file]{padding:8px}textarea{min-height:90px;resize:vertical}
 <div><label>Dirección</label><input id="cfgAddress"></div><div><label>Ciudad</label><input id="cfgCity" placeholder="Medellín"></div>
 </div><div style="margin-top:12px"><img id="logoPreview" class="logo-preview" alt="Vista previa del logo"></div><div class="actions"><button class="btn primary" id="saveConfig" type="button">💾 Guardar identidad</button></div></div>
 <div class="card"><h2>💾 Archivo de datos</h2><p class="muted">La información se guarda automáticamente en el navegador y, si conectas un archivo local, también se escribe en ese archivo después de cada cambio.</p><div class="actions"><button class="btn primary" id="connectFile" type="button">📁 Conectar / crear archivo</button><button class="btn secondary" id="saveFileNow" type="button">💾 Guardar archivo ahora</button><button class="btn secondary" id="importFileBtn" type="button">⬆️ Importar archivo</button><input id="importFile" type="file" accept=".json" hidden></div><p id="fileHelp" class="muted"></p></div>
-<div class="card"><h2>☁️ Google Drive + Apps Script</h2><p class="muted">El guardado local sigue funcionando igual. Cada cambio se guarda primero en este dispositivo y luego se sincroniza con Google Drive. PC y celular usan la misma base en Drive. Antes de guardar se comprueban los cambios nuevos, se combinan registros independientes y se bloquean los conflictos. Sin Internet los cambios quedan pendientes localmente. Configura la misma URL y token en cada dispositivo una sola vez.</p><div class="grid"><div><label>URL de la aplicación web de Apps Script</label><input id="cfgDriveUrl" placeholder="https://script.google.com/macros/s/…/exec" autocomplete="off"></div><div><label>Token secreto</label><input id="cfgDriveToken" type="password" placeholder="El mismo token del Apps Script" autocomplete="off"></div></div><div class="actions" style="margin-top:12px"><button class="btn primary" id="saveDriveConfig" type="button">☁️ Guardar conexión Drive</button><button class="btn secondary" id="syncDriveNow" type="button">🔄 Sincronizar ahora</button><button class="btn secondary" id="restoreDriveNow" type="button">🔎 Revisar diferencias</button><button class="btn secondary" id="backupBeforeResolve" type="button">⬇️ Respaldo local JSON</button></div><p id="driveState" class="muted">No configurado</p><p class="muted">Importante: despliega Apps Script como aplicación web. Para dispositivos móviles se necesita Apps Script V25 (lectura por partes). El puente se entrega junto con este archivo.</p></div>
+<div class="card"><h2>☁️ Google Drive + Apps Script</h2><p class="muted">El guardado local sigue funcionando igual. Cada cambio se guarda primero en este dispositivo y luego se sincroniza con Google Drive. PC y celular usan la misma base en Drive. Antes de guardar se comprueban los cambios nuevos, se combinan registros independientes y se bloquean los conflictos. Sin Internet los cambios quedan pendientes localmente. Configura la misma URL y token en cada dispositivo una sola vez.</p><div class="grid"><div><label>URL de la aplicación web de Apps Script</label><input id="cfgDriveUrl" placeholder="https://script.google.com/macros/s/…/exec" autocomplete="off"></div><div><label>Token secreto</label><input id="cfgDriveToken" type="password" placeholder="El mismo token del Apps Script" autocomplete="off"></div></div><div class="actions" style="margin-top:12px"><button class="btn primary" id="saveDriveConfig" type="button">☁️ Guardar conexión Drive</button><button class="btn secondary" id="syncDriveNow" type="button">🔄 Sincronizar ahora</button><button class="btn secondary" id="restoreDriveNow" type="button">🔎 Revisar diferencias</button><button class="btn secondary" id="backupBeforeResolve" type="button">⬇️ Respaldo local JSON</button></div><p id="driveState" class="muted">No configurado</p><p class="muted">Importante: despliega Apps Script como aplicación web. Para dispositivos móviles se necesita Apps Script V25 (o compatible) con lectura por partes. La V26 evita descargas repetidas si no hubo cambios. El puente se entrega junto con este archivo.</p></div>
 </section>
 </main>
 
@@ -195,7 +195,7 @@ let stateDb=null;
 function openStateDB(){return new Promise((resolve,reject)=>{if(stateDb)return resolve(stateDb);let r=indexedDB.open('control_negocio_state_v8',1);r.onupgradeneeded=()=>{if(!r.result.objectStoreNames.contains('state'))r.result.createObjectStore('state')};r.onsuccess=()=>{stateDb=r.result;resolve(stateDb)};r.onerror=()=>reject(r.error)})}
 async function persistBrowser(){try{let d=await openStateDB();await new Promise((res,rej)=>{let tx=d.transaction('state','readwrite');tx.objectStore('state').put(db,'data');tx.oncomplete=res;tx.onerror=()=>rej(tx.error)});$('saveState').textContent='✓ Guardado automáticamente · '+new Date().toLocaleTimeString('es-CO',{hour:'2-digit',minute:'2-digit'});return true}catch(e){try{localStorage.setItem(KEY,JSON.stringify(db));$('saveState').textContent='✓ Guardado local · '+new Date().toLocaleTimeString('es-CO',{hour:'2-digit',minute:'2-digit'});return true}catch(err){$('saveState').textContent='⚠️ No se pudo guardar';return false}}}
 async function loadBrowser(){try{let d=await openStateDB();let x=await new Promise((res,rej)=>{let q=d.transaction('state','readonly').objectStore('state').get('data');q.onsuccess=()=>res(q.result);q.onerror=()=>rej(q.error)});if(x){db=normalize(x);return}}catch(e){}try{let x=JSON.parse(localStorage.getItem(KEY));if(x)db=normalize(x)}catch(e){}}
-// V25: sincronización con revisión del servidor y fusión en tres vías.
+// V26: sincronización incremental por revisión del servidor y fusión en tres vías.
 const SYNC_COLLECTIONS=['ventas','gastos','inventario','documentos','notas'];
 const PRIVATE_CONFIG_KEYS=['driveScriptUrl','driveToken'];
 let driveSyncTimer=null,driveSyncBusy=false,driveSyncQueued=false,driveConflict=false,driveSyncBase=null;
@@ -242,7 +242,8 @@ function mergeThreeWays(base,local,remote){
       else{conflicts.push(name+' · '+String(l?.producto||r?.producto||l?.persona||r?.persona||id).slice(0,65));continue}
       if(chosen!==undefined)result.push(chosen);
     }
-    const order=new Map([...rm.keys(),...lm.keys()].map((id,i)=>[id,i]));
+    // Priorizar el orden de Drive; no sobrescribir posiciones al repetir IDs locales.
+    const order=new Map();for(const id of [...rm.keys(),...lm.keys()])if(!order.has(id))order.set(id,order.size);
     result.sort((a,b)=>(order.get(String(a.id))??0)-(order.get(String(b.id))??0));
     merged[name]=result;
   }
@@ -263,7 +264,7 @@ function postDriveForm(payload){return new Promise((resolve,reject)=>{try{
   const add=(name,value)=>{const input=document.createElement('input');input.type='hidden';input.name=name;input.value=String(value);form.appendChild(input)};
   add('action','save');add('token',payload.token);add('data',JSON.stringify(payload.data));add('baseRevision',payload.baseRevision);add('writeId',payload.writeId);document.body.appendChild(form);form.submit();setTimeout(()=>{form.remove();resolve(true)},350)
 }catch(e){reject(e)}})}
-// V25: carga segura con diagnóstico y alternativa por bloques para navegadores móviles.
+// V26: estado ligero; la carga por bloques solo se usa si la revisión cambió.
 let preferSmallDriveChunks=false;
 function driveApi(action,params={}){
   const u=new URL(driveUrl());
@@ -325,8 +326,9 @@ async function readDriveInChunks(expectedRevision){
   data._meta.revision=rev;
   return data;
 }
-async function readDrive(){
-  const status=await driveStatus();
+async function readDrive(knownStatus=null){
+  // La comprobación inicial puede reutilizarse: evita consultar dos veces el estado.
+  const status=knownStatus||await driveStatus();
   const revision=Number(status.revision);
   if(preferSmallDriveChunks||Number(status.sizeChars)>450000){
     preferSmallDriveChunks=true;
@@ -361,8 +363,31 @@ async function syncDriveNow(show=true){
   driveSyncBusy=true;
   const endpoint=driveUrl();const localAtStart=sharedState(db);
   try{
-    setDriveState('comprobando cambios…');
-    const rawRemote=await readDrive();if(driveUrl()!==endpoint){driveSyncQueued=true;return false}
+    // V26: primero consulta SOLO el estado (revisión y metadatos pequeños).
+    // La comprobación periódica no debe descargar 57 bloques si no cambió Drive.
+    if(show||!String($('driveState')?.textContent||'').includes('sincronizado'))setDriveState('comprobando cambios…');
+    const remoteStatus=await driveStatus();
+    if(driveUrl()!==endpoint){driveSyncQueued=true;return false}
+    // No se aplica ni se confirma una revisión si el usuario editó mientras consultábamos.
+    if(!identical(localAtStart,sharedState(db))){driveSyncQueued=true;return false}
+    const statusRev=Number(remoteStatus.revision);
+    const savedBase=driveSyncBase?.endpoint===endpoint?driveSyncBase:null;
+    const sameRemoteRevision=!!(savedBase?.state&&Number.isSafeInteger(Number(savedBase.revision))&&Number(savedBase.revision)===statusRev);
+    if(sameRemoteRevision&&identical(localAtStart,savedBase.state)){
+      // Ya tenemos exactamente el estado de Drive: sin descarga ni escritura.
+      ensureDriveMeta().driveSyncedAt=Number(remoteStatus.updatedAt)||db._meta.driveSyncedAt;
+      db._meta.driveRevision=statusRev;
+      setDriveState('sincronizado ✓');
+      if(show)syncAlert('✓ No hay cambios nuevos en Drive. La información está actualizada.');
+      return true;
+    }
+    // Si Drive no cambió pero hay cambios locales, se usa la última copia
+    // confirmada para fusionar y enviar únicamente una escritura protegida.
+    // Si la revisión cambió, se descarga la base nueva para conciliar.
+    const rawRemote=sameRemoteRevision
+      ? {...savedBase.state,_meta:{revision:statusRev,updatedAt:Number(remoteStatus.updatedAt)||Date.now()}}
+      : await readDrive(remoteStatus);
+    if(driveUrl()!==endpoint){driveSyncQueued=true;return false}
     const remote=sharedState(rawRemote),rev=Number(rawRemote._meta.revision)||0;
     // Durante una lectura remota no se deben reemplazar ediciones que se estén haciendo localmente.
     if(!identical(localAtStart,sharedState(db))){driveSyncQueued=true;return false}
