@@ -1,13 +1,11 @@
 <!doctype html>
 <html lang="es">
 <head>
-<link rel="manifest" href="manifest.webmanifest">
-<meta name="theme-color" content="#0ea5e9">
-<meta name="mobile-web-app-capable" content="yes">
-<meta name="apple-mobile-web-app-capable" content="yes">
 <meta charset="utf-8">
 <meta name="viewport" content="width=device-width,initial-scale=1">
 <title>Control de Negocio</title>
+<meta name="theme-color" content="#2563eb">
+<link rel="manifest" href="manifest.webmanifest">
 <style>
 :root{
  --bg:#f4f7fb;--card:#fff;--text:#172033;--muted:#667085;--line:#e4e7ec;
@@ -102,7 +100,7 @@ input[type=file]{padding:8px}textarea{min-height:90px;resize:vertical}
 <div><label>Vista previa</label><img id="photoPreview" class="preview" alt="Vista previa del producto"></div>
 </div><p id="photoInfo" class="muted"></p><div class="actions"><button class="btn primary">💾 Guardar producto</button><button class="btn secondary" type="button" id="invCancel" hidden>Cancelar edición</button></div></form></div>
 <div class="card"><h2>📊 Resumen del inventario</h2><div class="stats inventory-stats"><div class="stat"><span class="label">Inversión total en inventario</span><strong id="invInvestmentTotal">$0</strong><small class="muted">Stock × precio de compra</small></div><div class="stat"><span class="label">Ganancia potencial total</span><strong id="invProfitTotal">$0</strong><small class="muted">Si se vende todo el stock al precio de venta</small></div><div class="stat"><span class="label">Valor total de venta</span><strong id="invSalesValueTotal">$0</strong><small class="muted">Stock × precio de venta</small></div></div></div>
-<div class="card"><div style="display:flex;justify-content:space-between;align-items:end;gap:12px;flex-wrap:wrap"><div><h2 style="margin-bottom:4px">🛍️ Productos registrados</h2><p class="muted" style="margin:0">Busca rápidamente tus productos por nombre.</p></div><div style="display:flex;gap:8px;align-items:end;flex-wrap:wrap;min-width:min(100%,360px);flex:1"><div style="flex:1;min-width:220px"><label for="inventorySearch">Buscar producto</label><input id="inventorySearch" type="search" placeholder="🔎 Escribe el nombre del producto..."></div><button class="btn primary" type="button" id="shareInventoryBtn">🔗 Compartir inventario</button></div></div><div id="inventoryShareBox" class="card" style="display:none;margin-top:14px;background:var(--soft);border:1px solid var(--line)"><strong>🔗 Enlace público de tu inventario</strong><p class="muted" style="margin:6px 0 10px">Tus clientes verán todos los productos registrados, incluso los que tengan stock 0, con foto, nombre y precio de venta por unidad. Después de abrir el enlace una vez con internet, el catálogo podrá seguir viéndose sin conexión en ese dispositivo.</p><div style="display:flex;gap:8px;flex-wrap:wrap"><input id="inventoryShareLink" readonly style="flex:1;min-width:240px"><button class="btn secondary" type="button" id="copyInventoryLink">📋 Copiar enlace</button><button class="btn secondary" type="button" id="openInventoryLink">↗️ Abrir</button></div></div><div id="inventorySearchInfo" class="muted" style="margin:12px 0 0"></div><div id="productGrid" class="product-grid" style="margin-top:14px"></div></div>
+<div class="card"><div style="display:flex;justify-content:space-between;align-items:end;gap:12px;flex-wrap:wrap"><div><h2 style="margin-bottom:4px">🛍️ Productos registrados</h2><p class="muted" style="margin:0">Busca rápidamente tus productos por nombre.</p></div><div style="display:flex;gap:8px;align-items:end;flex-wrap:wrap;min-width:min(100%,360px);flex:1"><div style="flex:1;min-width:220px"><label for="inventorySearch">Buscar producto</label><input id="inventorySearch" type="search" placeholder="🔎 Escribe el nombre del producto..."></div><button class="btn primary" type="button" id="generateCatalogBtn">📄 Generar catálogo</button></div></div><div id="catalogGenerateBox" class="card" style="margin-top:14px;background:#f8fafc;border:1px solid var(--line)"><strong>📄 Catálogo independiente</strong><p class="muted" style="margin:6px 0 10px">Genera un archivo HTML con los productos registrados, sus fotos y precios. No muestra el stock y funciona sin internet después de descargarlo. Si agregas o cambias productos, vuelve a generar otro archivo para crear una versión actualizada.</p><div class="actions"><button class="btn secondary" type="button" id="openGeneratedCatalog" disabled>↗️ Abrir último catálogo</button><button class="btn secondary" type="button" id="downloadCatalogAgain" disabled>⬇️ Generar otra versión</button></div><p id="catalogGenerateInfo" class="muted" style="margin:10px 0 0">Todavía no has generado un catálogo.</p></div><div id="inventorySearchInfo" class="muted" style="margin:12px 0 0"></div><div id="productGrid" class="product-grid" style="margin-top:14px"></div></div>
 </section>
 
 <section id="notas" class="page">
@@ -161,8 +159,7 @@ input[type=file]{padding:8px}textarea{min-height:90px;resize:vertical}
 <div><label>Dirección</label><input id="cfgAddress"></div><div><label>Ciudad</label><input id="cfgCity" placeholder="Medellín"></div>
 </div><div style="margin-top:12px"><img id="logoPreview" class="logo-preview" alt="Vista previa del logo"></div><div class="actions"><button class="btn primary" id="saveConfig" type="button">💾 Guardar identidad</button></div></div>
 <div class="card"><h2>💾 Archivo de datos</h2><p class="muted">La información se guarda automáticamente en el navegador y, si conectas un archivo local, también se escribe en ese archivo después de cada cambio.</p><div class="actions"><button class="btn primary" id="connectFile" type="button">📁 Conectar / crear archivo</button><button class="btn secondary" id="saveFileNow" type="button">💾 Guardar archivo ahora</button><button class="btn secondary" id="importFileBtn" type="button">⬆️ Importar archivo</button><input id="importFile" type="file" accept=".json" hidden></div><p id="fileHelp" class="muted"></p></div>
-<div class="card"><h2>🔗 Catálogo público offline</h2><p class="muted">Aquí va la dirección de la PWA del catálogo que se entrega junto con esta versión. Después de alojarla en HTTPS, pega aquí su dirección base. El enlace que compartirás con tus clientes funcionará sin internet después de abrirlo una vez conectado.</p><div><label>URL base del catálogo PWA</label><input id="cfgCatalogBaseUrl" placeholder="https://tuusuario.github.io/catalogo-negocio/" autocomplete="off"></div><p class="muted">No pongas aquí el token de Drive. El catálogo solo recibe una clave pública y consulta únicamente los productos.</p></div>
-<div class="card"><h2>☁️ Google Drive + Apps Script</h2><p class="muted">El guardado local sigue funcionando igual. Cada cambio se guarda primero en este dispositivo y luego se sincroniza con Google Drive. Al abrir el sistema en otro dispositivo, comprobará automáticamente si Drive tiene información más reciente. Si no hay internet, conserva los datos localmente y reintenta después.</p><div class="grid"><div><label>URL de la aplicación web de Apps Script</label><input id="cfgDriveUrl" placeholder="https://script.google.com/macros/s/…/exec" autocomplete="off"></div><div><label>Token secreto</label><input id="cfgDriveToken" type="password" placeholder="El mismo token del Apps Script" autocomplete="off"></div></div><div class="actions" style="margin-top:12px"><button class="btn primary" id="saveDriveConfig" type="button">☁️ Guardar conexión Drive</button><button class="btn secondary" id="syncDriveNow" type="button">🔄 Sincronizar ahora</button><button class="btn secondary" id="restoreDriveNow" type="button">⬇️ Restaurar desde Drive</button></div><p id="driveState" class="muted">No configurado</p><p class="muted">Importante: despliega Apps Script como aplicación web. El script puente se entrega junto con este archivo.</p></div>
+<div class="card"><h2>☁️ Google Drive + Apps Script</h2><p class="muted">El guardado local sigue funcionando igual. Cada cambio se guarda primero en este dispositivo y luego se sincroniza con Google Drive. PC y celular usan la misma base en Drive. Antes de guardar se comprueban los cambios nuevos, se combinan registros independientes y se bloquean los conflictos. Sin Internet los cambios quedan pendientes localmente. Configura la misma URL y token en cada dispositivo una sola vez.</p><div class="grid"><div><label>URL de la aplicación web de Apps Script</label><input id="cfgDriveUrl" placeholder="https://script.google.com/macros/s/…/exec" autocomplete="off"></div><div><label>Token secreto</label><input id="cfgDriveToken" type="password" placeholder="El mismo token del Apps Script" autocomplete="off"></div></div><div class="actions" style="margin-top:12px"><button class="btn primary" id="saveDriveConfig" type="button">☁️ Guardar conexión Drive</button><button class="btn secondary" id="syncDriveNow" type="button">🔄 Sincronizar ahora</button><button class="btn secondary" id="restoreDriveNow" type="button">🔎 Revisar diferencias</button><button class="btn secondary" id="backupBeforeResolve" type="button">⬇️ Respaldo local JSON</button></div><p id="driveState" class="muted">No configurado</p><p class="muted">Importante: despliega Apps Script como aplicación web. El script puente se entrega junto con este archivo.</p></div>
 </section>
 </main>
 
@@ -198,112 +195,154 @@ let stateDb=null;
 function openStateDB(){return new Promise((resolve,reject)=>{if(stateDb)return resolve(stateDb);let r=indexedDB.open('control_negocio_state_v8',1);r.onupgradeneeded=()=>{if(!r.result.objectStoreNames.contains('state'))r.result.createObjectStore('state')};r.onsuccess=()=>{stateDb=r.result;resolve(stateDb)};r.onerror=()=>reject(r.error)})}
 async function persistBrowser(){try{let d=await openStateDB();await new Promise((res,rej)=>{let tx=d.transaction('state','readwrite');tx.objectStore('state').put(db,'data');tx.oncomplete=res;tx.onerror=()=>rej(tx.error)});$('saveState').textContent='✓ Guardado automáticamente · '+new Date().toLocaleTimeString('es-CO',{hour:'2-digit',minute:'2-digit'});return true}catch(e){try{localStorage.setItem(KEY,JSON.stringify(db));$('saveState').textContent='✓ Guardado local · '+new Date().toLocaleTimeString('es-CO',{hour:'2-digit',minute:'2-digit'});return true}catch(err){$('saveState').textContent='⚠️ No se pudo guardar';return false}}}
 async function loadBrowser(){try{let d=await openStateDB();let x=await new Promise((res,rej)=>{let q=d.transaction('state','readonly').objectStore('state').get('data');q.onsuccess=()=>res(q.result);q.onerror=()=>rej(q.error)});if(x){db=normalize(x);return}}catch(e){}try{let x=JSON.parse(localStorage.getItem(KEY));if(x)db=normalize(x)}catch(e){}}
-let driveSyncTimer=null,driveSyncBusy=false,driveSyncQueued=false,driveStartupChecked=false;
+// V24: sincronización con revisión del servidor y fusión en tres vías.
+const SYNC_COLLECTIONS=['ventas','gastos','inventario','documentos','notas'];
+const PRIVATE_CONFIG_KEYS=['driveScriptUrl','driveToken'];
+let driveSyncTimer=null,driveSyncBusy=false,driveSyncQueued=false,driveConflict=false,driveSyncBase=null;
 function driveConfigured(){return !!(String(db.config.driveScriptUrl||'').trim()&&String(db.config.driveToken||'').trim())}
 function driveUrl(){return String(db.config.driveScriptUrl||'').trim().replace(/\/$/,'')}
-function setDriveState(text,cls=''){const el=$('driveState');if(el){el.textContent=text;el.className='muted '+cls}$('fileState').textContent=driveConfigured()?'☁️ Google Drive · '+text:'Solo navegador'}
+function setDriveState(msg,cls=''){const el=$('driveState');if(el){el.textContent=msg;el.className='muted '+cls}$('fileState').textContent=driveConfigured()?'☁️ Google Drive · '+msg:'Solo navegador'}
 function ensureDriveMeta(){db._meta=db._meta||{};db._meta.driveSyncedAt=Number(db._meta.driveSyncedAt)||0;return db._meta}
-function jsonp(url,timeout=20000){return new Promise((resolve,reject)=>{const cb='driveCb_'+Date.now()+'_'+Math.random().toString(36).slice(2);let done=false;const script=document.createElement('script');const timer=setTimeout(()=>finish(new Error('Tiempo de espera agotado al consultar Apps Script')),timeout);function cleanup(){clearTimeout(timer);delete window[cb];script.remove()}function finish(err,data){if(done)return;done=true;cleanup();err?reject(err):resolve(data)}window[cb]=data=>finish(null,data);script.onerror=()=>finish(new Error('El navegador no pudo cargar la respuesta de Apps Script'));const sep=url.includes('?')?'&':'?';script.src=url+sep+'prefix='+encodeURIComponent(cb);document.head.appendChild(script)})}
-function postDriveForm(payload){return new Promise((resolve,reject)=>{try{let frame=document.getElementById('drivePostFrame');if(!frame){frame=document.createElement('iframe');frame.id='drivePostFrame';frame.name='drivePostFrame';frame.style.display='none';document.body.appendChild(frame)}const form=document.createElement('form');form.method='POST';form.action=driveUrl();form.target='drivePostFrame';form.style.display='none';const add=(name,value)=>{const input=document.createElement('input');input.type='hidden';input.name=name;input.value=value;form.appendChild(input)};add('action','save');add('token',payload.token);add('clientUpdatedAt',String(payload.clientUpdatedAt));add('data',JSON.stringify(payload.data));document.body.appendChild(form);form.submit();setTimeout(()=>{form.remove();resolve(true)},300)}catch(err){reject(err)}})}
-async function waitDriveStatus(expectedUpdatedAt,attempts=8){let lastError='No se pudo confirmar la actualización en Drive';for(let i=0;i<attempts;i++){try{const st=await jsonp(driveUrl()+'?action=status&token='+encodeURIComponent(db.config.driveToken));if(st&&st.ok){const remote=Number(st.updatedAt)||0;if(remote>=Number(expectedUpdatedAt)){return st}lastError='Drive respondió, pero todavía muestra una versión anterior de los datos'}else{lastError=(st&&st.error)||lastError}}catch(e){lastError=e&&e.message?e.message:lastError}await new Promise(r=>setTimeout(r,1000))}throw new Error(lastError)}
-async function saveDriveNow(show=true){
+function canonical(value){if(Array.isArray(value))return value.map(canonical);if(value&&typeof value==='object')return Object.fromEntries(Object.keys(value).sort().map(k=>[k,canonical(value[k])]));return value}
+function identical(a,b){return JSON.stringify(canonical(a))===JSON.stringify(canonical(b))}
+function sharedState(source){
+  const c={...(source?.config||{})};PRIVATE_CONFIG_KEYS.forEach(k=>delete c[k]);
+  return Object.fromEntries([...SYNC_COLLECTIONS.map(k=>[k,JSON.parse(JSON.stringify(Array.isArray(source?.[k])?source[k]:[]))]),['config',c]]);
+}
+function defaultShared(){return sharedState({ventas:[],gastos:[],inventario:[],documentos:[],notas:[],config:{name:'Control de Negocio',logo:'',phone:'',instagram:'',facebook:'',email:'',address:'',city:''}})}
+function isEmptyShared(s){return SYNC_COLLECTIONS.every(k=>!s[k]?.length)&&Object.entries(s.config||{}).every(([k,v])=>v===(defaultShared().config[k]??''))}
+function adoptShared(s,remoteMeta={}){
+  const connection={driveScriptUrl:db.config.driveScriptUrl||'',driveToken:db.config.driveToken||''};
+  for(const name of SYNC_COLLECTIONS)db[name]=JSON.parse(JSON.stringify(s[name]||[]));
+  db.config={...db.config,...s.config,...connection};
+  db._meta={...db._meta,updatedAt:Number(remoteMeta.updatedAt)||Date.now(),driveSyncedAt:Number(remoteMeta.updatedAt)||Date.now(),driveRevision:Number(remoteMeta.revision)||0};
+}
+async function loadSyncBase(){
+  try{const d=await openStateDB();driveSyncBase=await new Promise((res,rej)=>{const q=d.transaction('state','readonly').objectStore('state').get('syncBaseV24');q.onsuccess=()=>res(q.result||null);q.onerror=()=>rej(q.error)})}
+  catch(e){try{driveSyncBase=JSON.parse(localStorage.getItem(KEY+'_syncBaseV24')||'null')}catch(_){driveSyncBase=null}}
+  if(driveSyncBase?.endpoint!==driveUrl())driveSyncBase=null;
+}
+async function storeSyncBase(s,revision){
+  driveSyncBase={endpoint:driveUrl(),revision,state:JSON.parse(JSON.stringify(s))};
+  try{const d=await openStateDB();await new Promise((res,rej)=>{const t=d.transaction('state','readwrite');t.objectStore('state').put(driveSyncBase,'syncBaseV24');t.oncomplete=res;t.onerror=()=>rej(t.error)})}
+  catch(e){try{localStorage.setItem(KEY+'_syncBaseV24',JSON.stringify(driveSyncBase))}catch(_){}}
+}
+async function clearSyncBase(){driveSyncBase=null;try{const d=await openStateDB();await new Promise((res,rej)=>{const t=d.transaction('state','readwrite');t.objectStore('state').delete('syncBaseV24');t.oncomplete=res;t.onerror=()=>rej(t.error)})}catch(e){}try{localStorage.removeItem(KEY+'_syncBaseV24')}catch(e){}}
+function mergeThreeWays(base,local,remote){
+  const merged={config:{}};const conflicts=[];
+  for(const name of SYNC_COLLECTIONS){
+    const toMap=arr=>new Map((arr||[]).filter(x=>x&&x.id).map(x=>[String(x.id),x]));
+    const bm=toMap(base[name]),lm=toMap(local[name]),rm=toMap(remote[name]);
+    const keys=new Set([...bm.keys(),...lm.keys(),...rm.keys()]);
+    const result=[];
+    for(const id of keys){const b=bm.get(id),l=lm.get(id),r=rm.get(id);let chosen;
+      if(identical(l,r))chosen=l;
+      else if(identical(l,b))chosen=r;
+      else if(identical(r,b))chosen=l;
+      else{conflicts.push(name+' · '+String(l?.producto||r?.producto||l?.persona||r?.persona||id).slice(0,65));continue}
+      if(chosen!==undefined)result.push(chosen);
+    }
+    const order=new Map([...rm.keys(),...lm.keys()].map((id,i)=>[id,i]));
+    result.sort((a,b)=>(order.get(String(a.id))??0)-(order.get(String(b.id))??0));
+    merged[name]=result;
+  }
+  const configKeys=new Set([...Object.keys(base.config||{}),...Object.keys(local.config||{}),...Object.keys(remote.config||{})]);
+  for(const k of configKeys){if(PRIVATE_CONFIG_KEYS.includes(k))continue;
+    const b=base.config?.[k],l=local.config?.[k],r=remote.config?.[k];
+    if(identical(l,r))merged.config[k]=l;
+    else if(identical(l,b))merged.config[k]=r;
+    else if(identical(r,b))merged.config[k]=l;
+    else conflicts.push('Configuración · '+k);
+  }
+  return {merged,conflicts};
+}
+function jsonp(url,timeout=20000){return new Promise((resolve,reject)=>{const cb='driveCb_'+Date.now()+'_'+Math.random().toString(36).slice(2);let done=false;const script=document.createElement('script');const timer=setTimeout(()=>finish(new Error('Tiempo de espera al consultar Apps Script')),timeout);function cleanup(){clearTimeout(timer);delete window[cb];script.remove()}function finish(err,data){if(done)return;done=true;cleanup();err?reject(err):resolve(data)}window[cb]=data=>finish(null,data);script.onerror=()=>finish(new Error('No se pudo consultar Apps Script'));script.src=url+(url.includes('?')?'&':'?')+'prefix='+encodeURIComponent(cb);document.head.appendChild(script)})}
+function postDriveForm(payload){return new Promise((resolve,reject)=>{try{
+  let frame=document.getElementById('drivePostFrame');if(!frame){frame=document.createElement('iframe');frame.id='drivePostFrame';frame.name='drivePostFrame';frame.style.display='none';document.body.appendChild(frame)}
+  const form=document.createElement('form');form.method='POST';form.action=driveUrl();form.target='drivePostFrame';form.style.display='none';
+  const add=(name,value)=>{const input=document.createElement('input');input.type='hidden';input.name=name;input.value=String(value);form.appendChild(input)};
+  add('action','save');add('token',payload.token);add('data',JSON.stringify(payload.data));add('baseRevision',payload.baseRevision);add('writeId',payload.writeId);document.body.appendChild(form);form.submit();setTimeout(()=>{form.remove();resolve(true)},350)
+}catch(e){reject(e)}})}
+async function readDrive(){const r=await jsonp(driveUrl()+'?action=load&token='+encodeURIComponent(db.config.driveToken));if(!r?.ok||!r.data)throw new Error(r?.error||'No se pudo leer el archivo de Drive');if(!Number.isInteger(Number(r.data._meta?.revision)))throw new Error('Actualiza el Apps Script al puente V24 antes de sincronizar. No se ha enviado ningún dato.');return r.data}
+async function confirmDriveWrite(writeId,expectedRevision){for(let i=0;i<12;i++){
+  try{const st=await jsonp(driveUrl()+'?action=status&token='+encodeURIComponent(db.config.driveToken));if(st?.ok){if(st.lastWriteId===writeId&&Number(st.revision)===expectedRevision)return st;if(Number(st.revision)>expectedRevision||Number(st.revision)===expectedRevision&&st.lastWriteId!==writeId)throw new Error('Otro dispositivo modificó Drive: se volverá a comparar sin sobrescribirlo.')}}
+  catch(e){if(String(e.message||'').includes('Otro dispositivo'))throw e}
+  await new Promise(r=>setTimeout(r,850));
+}throw new Error('No se pudo confirmar el guardado. Se conservarán los datos locales hasta comprobar Drive.')}
+function syncAlert(message){const help=$('fileHelp');if(help)help.textContent=message}
+async function saveDriveNow(show=true){return syncDriveNow(show)}
+async function loadDriveRemote(mode='startup'){return syncDriveNow(mode==='manual')}
+async function syncDriveNow(show=true){
   if(!driveConfigured())return false;
   if(driveSyncBusy){driveSyncQueued=true;return false}
   driveSyncBusy=true;
-  const clientUpdatedAt=Number(db._meta?.updatedAt)||Date.now();
-  const payload={action:'save',token:db.config.driveToken,data:db,clientUpdatedAt};
+  const endpoint=driveUrl();const localAtStart=sharedState(db);
   try{
-    setDriveState('sincronizando…');
+    setDriveState('comprobando cambios…');
+    const rawRemote=await readDrive();if(driveUrl()!==endpoint){driveSyncQueued=true;return false}
+    const remote=sharedState(rawRemote),rev=Number(rawRemote._meta.revision)||0;
+    // Durante una lectura remota no se deben reemplazar ediciones que se estén haciendo localmente.
+    if(!identical(localAtStart,sharedState(db))){driveSyncQueued=true;return false}
+    let base=driveSyncBase?.endpoint===endpoint?driveSyncBase.state:null;
+    if(!base){
+      if(identical(localAtStart,remote)||isEmptyShared(localAtStart))base=localAtStart;
+      else if(isEmptyShared(remote))base=remote;
+      else{
+        driveConflict=true;setDriveState('revisión necesaria ⚠️');
+        syncAlert('⚠️ Este dispositivo y Drive tienen datos diferentes, sin historial común de sincronización. No se ha reemplazado ni subido nada. Descarga tu copia local y usa “Revisar diferencias” para decidir cómo continuar.');
+        return false;
+      }
+    }
+    const reconciliation=mergeThreeWays(base,localAtStart,remote);
+    if(reconciliation.conflicts.length){
+      driveConflict=true;setDriveState('conflicto protegido ⚠️');
+      syncAlert('⚠️ Cambios simultáneos en: '+reconciliation.conflicts.slice(0,4).join('; ')+'. Ningún dato será reemplazado. Guarda un respaldo y resuelve las diferencias.');return false;
+    }
+    const merged=reconciliation.merged;
+    if(!identical(localAtStart,sharedState(db))){driveSyncQueued=true;return false}
+    if(identical(merged,remote)){
+      const changed=!identical(localAtStart,remote);
+      if(changed){adoptShared(remote,rawRemote._meta||{});await persistBrowser();renderAll()}
+      else{ensureDriveMeta().driveSyncedAt=Number(rawRemote._meta?.updatedAt)||Date.now();db._meta.driveRevision=rev;await persistBrowser()}
+      await storeSyncBase(remote,rev);driveConflict=false;setDriveState('sincronizado ✓');
+      if(show)syncAlert('✓ Datos cargados desde Drive. PC y celular pueden consultar la misma información.');
+      return true;
+    }
+    // Revisión del servidor: si otro equipo guarda antes, el servidor rechaza este POST.
+    const writeId=crypto.randomUUID();const payload={token:db.config.driveToken,baseRevision:rev,writeId,
+      data:{...merged,_meta:{updatedAt:Date.now(),revision:rev}}};
+    setDriveState('guardando cambios…');
     await postDriveForm(payload);
-    const st=await waitDriveStatus(clientUpdatedAt);
-    ensureDriveMeta().driveSyncedAt=Number(st.updatedAt)||clientUpdatedAt;
-    await persistBrowser();
-    setDriveState('sincronizado ✓');
-    if(show)$('fileHelp').textContent='✓ Base actualizada automáticamente en Google Drive · '+new Date(Number(st.updatedAt)||Date.now()).toLocaleTimeString('es-CO',{hour:'2-digit',minute:'2-digit'});
-    return true
-  }catch(e){
-    setDriveState('pendiente ⚠️');
-    if(show)$('fileHelp').textContent='⚠️ '+(e&&e.message?e.message:'No se pudo confirmar Google Drive.')+' Los datos siguen guardados localmente y se reintentará.';
-    return false
-  }finally{
-    driveSyncBusy=false;
-    if(driveSyncQueued){driveSyncQueued=false;setTimeout(()=>saveDriveNow(false),400)}
-  }
+    let status;
+    try{status=await confirmDriveWrite(writeId,rev+1)}catch(e){
+      driveSyncQueued=true;throw e;
+    }
+    // Guardó en Drive el estado anterior. Si hubo nuevas ediciones locales, no se tocan.
+    if(identical(localAtStart,sharedState(db))){adoptShared(merged,{updatedAt:status.updatedAt,revision:status.revision});await persistBrowser();renderAll()}
+    else{driveSyncQueued=true;ensureDriveMeta().driveSyncedAt=Number(status.updatedAt)||Date.now();await persistBrowser()}
+    await storeSyncBase(merged,Number(status.revision));
+    driveConflict=false;setDriveState(driveSyncQueued?'pendiente de actualizar':'sincronizado ✓');
+    if(show)syncAlert('✓ Datos confirmados en Drive, revisión '+status.revision+'.');
+    return true;
+  }catch(e){setDriveState('pendiente ⚠️');if(show||String(e?.message||'').includes('Actualiza'))syncAlert('⚠️ '+(e?.message||'No se pudo comprobar Drive')+' Los datos locales no se han eliminado.');return false}
+  finally{driveSyncBusy=false;if(driveSyncQueued&&!driveConflict){driveSyncQueued=false;clearTimeout(driveSyncTimer);driveSyncTimer=setTimeout(()=>syncDriveNow(false),1400)}}
 }
-async function loadDriveRemote(mode='startup'){
-  if(!driveConfigured())return false;
-  try{
-    setDriveState('comprobando…');
-    const r=await jsonp(driveUrl()+'?action=load&token='+encodeURIComponent(db.config.driveToken));
-    if(!r?.ok||!r.data){
-      setDriveState('sin archivo');
-      if(mode==='startup')$('fileHelp').textContent='☁️ No hay una copia disponible en Google Drive todavía. Los datos locales siguen intactos.';
-      return false
-    }
-    const remote=normalize(r.data);
-    const rt=Number(remote._meta?.updatedAt)||0;
-    const lt=Number(db._meta?.updatedAt)||0;
-    const synced=Number(db._meta?.driveSyncedAt)||0;
-    const localChangedSinceSync=lt>synced;
-    const remoteChangedSinceSync=rt>synced;
-
-    if(rt>lt){
-      if(localChangedSinceSync){
-        setDriveState('revisión necesaria ⚠️');
-        const useRemote=confirm('Google Drive tiene datos más recientes que este dispositivo. También hay cambios locales que todavía no se han sincronizado.\n\n¿Quieres reemplazar los datos locales por la copia de Google Drive?\n\nPulsa “Cancelar” para conservar los datos locales.');
-        if(useRemote){
-          db=remote;
-          ensureDriveMeta().driveSyncedAt=rt;
-          await persistBrowser();
-          renderAll();
-          setDriveState('sincronizado ✓');
-          $('fileHelp').textContent='✓ Se cargó la copia más reciente de Google Drive.';
-          return true
-        }
-        setDriveState('pendiente ⚠️');
-        $('fileHelp').textContent='⚠️ Se conservaron los datos locales. Puedes revisar y sincronizar manualmente desde Configuración.';
-        return false
-      }
-      db=remote;
-      ensureDriveMeta().driveSyncedAt=rt;
-      await persistBrowser();
-      renderAll();
-      setDriveState('sincronizado ✓');
-      if(mode==='startup')$('fileHelp').textContent='✓ Datos actualizados automáticamente desde Google Drive.';
-      return true
-    }
-
-    if(lt>rt){
-      if(remoteChangedSinceSync || !synced){
-        await saveDriveNow(false);
-        return true
-      }
-      await saveDriveNow(false);
-      return true
-    }
-
-    ensureDriveMeta().driveSyncedAt=rt;
-    await persistBrowser();
-    setDriveState('sincronizado ✓');
-    return false
-  }catch(e){
-    setDriveState('pendiente ⚠️');
-    if(mode==='startup')$('fileHelp').textContent='⚠️ No fue posible comprobar Google Drive. Los datos locales siguen disponibles y se reintentará automáticamente.';
-    return false
-  }
+async function autoSave(){
+  db._meta=db._meta||{};db._meta.updatedAt=Math.max(Date.now(),Number(db._meta.updatedAt||0)+1);
+  await persistBrowser();if(fileHandle)await writeFile(false);
+  if(driveConfigured()&&!driveConflict){clearTimeout(driveSyncTimer);driveSyncTimer=setTimeout(()=>syncDriveNow(false),1300)}
 }
-async function autoSave(){db._meta=db._meta||{};db._meta.updatedAt=Date.now();await persistBrowser();if(fileHandle)await writeFile(false);if(driveConfigured()){clearTimeout(driveSyncTimer);driveSyncTimer=setTimeout(()=>saveDriveNow(false),250)}}
 function openPage(id){document.querySelectorAll('.page').forEach(p=>p.classList.remove('active'));$(id).classList.add('active');document.querySelectorAll('nav button').forEach(b=>b.classList.toggle('active',b.dataset.page===id))}
 document.querySelectorAll('nav button').forEach(b=>b.onclick=()=>openPage(b.dataset.page));
 async function idbSetHandle(h){try{let d=await openStateDB();await new Promise((res,rej)=>{let tx=d.transaction('state','readwrite');tx.objectStore('state').put(h,'fileHandle');tx.oncomplete=res;tx.onerror=()=>rej(tx.error)})}catch(e){}}
 async function idbGetHandle(){try{let d=await openStateDB();return await new Promise((res,rej)=>{let q=d.transaction('state','readonly').objectStore('state').get('fileHandle');q.onsuccess=()=>res(q.result||null);q.onerror=()=>rej(q.error)})}catch(e){return null}}
 async function ensureFilePermission(){if(!fileHandle)return false;try{let p=await fileHandle.queryPermission({mode:'readwrite'});if(p==='granted')return true;if(fileHandle.requestPermission){p=await fileHandle.requestPermission({mode:'readwrite'});return p==='granted'}}catch(e){}return false}
 async function writeFile(show=true){if(!fileHandle)return false;try{if(!(await ensureFilePermission())){if(show)$('fileHelp').textContent='Autoriza el acceso al archivo para activar el guardado automático.';return false}let w=await fileHandle.createWritable();await w.write(JSON.stringify(db,null,2));await w.close();$('fileState').textContent='📁 Archivo conectado: '+fileHandle.name;if(show)$('fileHelp').textContent='✓ Archivo actualizado correctamente.';return true}catch(e){$('fileState').textContent='⚠️ Archivo no actualizado';if(show)$('fileHelp').textContent='No se pudo escribir el archivo. Los datos siguen guardados en el navegador.';return false}}
-async function restoreConnectedFile(){fileHandle=await idbGetHandle();if(!fileHandle)return;try{if(await ensureFilePermission()){let f=await fileHandle.getFile();if(f.size){let x=JSON.parse(await f.text());db=normalize(x);await persistBrowser();renderAll()}$('fileState').textContent='📁 Archivo conectado: '+fileHandle.name}else $('fileState').textContent='📁 Archivo conectado · permiso pendiente'}catch(e){$('fileState').textContent='📁 Archivo conectado · abre Configuración para autorizar'}}
+async function restoreConnectedFile(){fileHandle=await idbGetHandle();if(!fileHandle)return;try{if(await ensureFilePermission()){let f=await fileHandle.getFile();if(f.size){let x=normalize(JSON.parse(await f.text()));if(isEmptyShared(sharedState(db))&&!isEmptyShared(sharedState(x))){db=x;await persistBrowser();renderAll()}else if(!identical(sharedState(db),sharedState(x)))syncAlert('📁 El archivo conectado contiene una copia distinta. Se ha conservado la información del navegador para evitar reemplazos automáticos.')} $('fileState').textContent='📁 Archivo conectado: '+fileHandle.name}else $('fileState').textContent='📁 Archivo conectado · permiso pendiente'}catch(e){$('fileState').textContent='📁 Archivo conectado · revisa permisos'}}
 $('connectFile').onclick=async()=>{if(!window.showSaveFilePicker){alert('Este navegador no permite conectar directamente un archivo local. Usa Importar archivo para cargar un JSON y Guardar archivo para crear un respaldo.');return}try{fileHandle=await window.showSaveFilePicker({suggestedName:'datos-control-negocio.json',types:[{description:'Datos del negocio',accept:{'application/json':['.json']}}]});await idbSetHandle(fileHandle);await writeFile(true);renderAll()}catch(e){}};
 $('saveFileNow').onclick=async()=>{if(!fileHandle){$('connectFile').click();return}await writeFile(true)};
 $('importFileBtn').onclick=()=>$('importFile').click();
-$('importFile').onchange=e=>{let f=e.target.files[0];if(!f)return;let r=new FileReader();r.onload=async()=>{try{db=normalize(JSON.parse(r.result));await persistBrowser();if(fileHandle)await writeFile(false);renderAll();alert('Información importada correctamente.')}catch(_){alert('El archivo JSON no es válido o está incompleto.')}};r.readAsText(f);e.target.value=''};
+$('importFile').onchange=e=>{let f=e.target.files[0];if(!f)return;let r=new FileReader();r.onload=async()=>{try{db=normalize(JSON.parse(r.result));await clearSyncBase();driveConflict=true;await persistBrowser();if(fileHandle)await writeFile(false);renderAll();alert('Archivo importado localmente. Por seguridad no se subirá automáticamente a Drive hasta revisar las diferencias; puedes descargar un respaldo y usar Revisar diferencias.')}catch(_){alert('El archivo JSON no es válido o está incompleto.')}};r.readAsText(f);e.target.value=''};
 
 function editVenta(id){let x=db.ventas.find(a=>a.id===id);if(!x)return;openPage('ventas');$('ventaId').value=x.id;$('ventaProducto').value=x.producto;$('ventaValor').value=new Intl.NumberFormat('es-CO').format(x.valor);$('ventaFecha').value=x.fecha;$('ventaCantidad').value=x.cantidad||1;$('ventaInventario').value=x.inventarioId||'';let inv=db.inventario.find(p=>p.id===x.inventarioId);$('ventaInventarioSearch').value=inv?.producto||'';updateInventorySaleSelection();$('ventaNota').value=x.nota||'';$('ventaTitle').textContent='✏️ Editar venta';$('ventaCancel').hidden=false}
 function resetVenta(){$('ventaForm').reset();$('ventaId').value='';$('ventaFecha').value=today();$('ventaCantidad').value=1;$('ventaInventario').value='';$('ventaInventarioSearch').value='';$('ventaInventarioHint').textContent='Escribe el nombre o selecciónalo de la lista para descontar stock.';$('ventaInventarioHint').style.color='';$('ventaInventorySuggestions').classList.remove('open');$('ventaTitle').textContent='➕ Registrar venta';$('ventaCancel').hidden=true;populateInvSelect()}
@@ -357,24 +396,49 @@ function resetInv(){$('invForm').reset();$('invId').value='';pendingPhoto='';$('
 $('invCancel').onclick=resetInv;
 $('invForm').onsubmit=async e=>{e.preventDefault();let id=$('invId').value,old=db.inventario.find(x=>x.id===id),photo=pendingPhoto||old?.foto||'';let x={id:id||crypto.randomUUID(),producto:$('invProducto').value.trim(),stock:Math.max(0,+$('invStock').value||0),compra:numValue($('invCompra').value),venta:numValue($('invVenta').value),foto:photo,createdAt:old?.createdAt||nowStamp(),createdDate:old?.createdDate||today()};if(old)Object.assign(old,x);else db.inventario.unshift(x);await autoSave();resetInv();renderAll();openPage('inventario')};
 function editInv(id){let x=db.inventario.find(a=>a.id===id);if(!x)return;openPage('inventario');$('invId').value=x.id;$('invProducto').value=x.producto;$('invStock').value=x.stock;$('invCompra').value=new Intl.NumberFormat('es-CO').format(x.compra);$('invVenta').value=new Intl.NumberFormat('es-CO').format(x.venta);pendingPhoto=x.foto||'';if(pendingPhoto)$('photoPreview').src=pendingPhoto;$('invTitle').textContent='✏️ Editar producto';$('invCancel').hidden=false}
-function publicCatalogUrl(){let base=String(db.config.publicCatalogBaseUrl||'').trim().replace(/\/$/,'');let api=driveUrl(),key=String(db.config.publicCatalogKey||'').trim();if(!base||!api||!key)return '';return base+'/?key='+encodeURIComponent(key)+'&api='+encodeURIComponent(api)}
-function ensurePublicCatalogKey(){if(!db.config.publicCatalogKey){if(window.crypto?.randomUUID)db.config.publicCatalogKey=crypto.randomUUID().replace(/-/g,'');else db.config.publicCatalogKey=Math.random().toString(36).slice(2)+Date.now().toString(36)}return db.config.publicCatalogKey}
-async function shareInventory(){
- if(!driveConfigured()){alert('Primero configura y conecta Google Drive en Configuración.');return}
- const available=db.inventario;
- if(!available.length){alert('No tienes productos registrados para compartir.');return}
- ensurePublicCatalogKey();
- await autoSave();
- if(driveConfigured()) await saveDriveNow(true);
- const url=publicCatalogUrl();
- if(!url){alert('Falta configurar la URL base del catálogo PWA en Configuración. Guarda esa dirección y vuelve a compartir.');return}
- $('inventoryShareLink').value=url;
- $('inventoryShareBox').style.display='block';
- try{await navigator.clipboard.writeText(url);alert('Enlace del inventario generado y copiado. Compártelo con tus clientes.')}catch(e){alert('Enlace generado. Pulsa “Copiar enlace” para copiarlo.')}
+function escAttr(v){return String(v==null?'':v).replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;').replace(/"/g,'&quot;').replace(/'/g,'&#39;')}
+function catalogFilename(){
+  const base=(db.config.name||'catalogo').trim().replace(/[^a-z0-9áéíóúñü _-]/gi,'').replace(/\s+/g,'_').slice(0,50)||'catalogo';
+  const d=new Date();
+  const stamp=[d.getFullYear(),String(d.getMonth()+1).padStart(2,'0'),String(d.getDate()).padStart(2,'0'),'_',String(d.getHours()).padStart(2,'0'),String(d.getMinutes()).padStart(2,'0')].join('');
+  return base+'_catalogo_'+stamp+'.html';
 }
-$('shareInventoryBtn').onclick=shareInventory;
-$('copyInventoryLink').onclick=async()=>{const u=$('inventoryShareLink').value;if(!u)return;try{await navigator.clipboard.writeText(u);alert('Enlace copiado.')}catch(e){$('inventoryShareLink').focus();$('inventoryShareLink').select();document.execCommand('copy');alert('Enlace copiado.')}};
-$('openInventoryLink').onclick=()=>{const u=$('inventoryShareLink').value;if(u)window.open(u,'_blank','noopener,noreferrer')};
+function buildStandaloneCatalog(){
+  const products=(db.inventario||[]).filter(p=>p&&String(p.producto||'').trim()).map(p=>({
+    name:String(p.producto||'Producto'), price:Number(p.venta)||0, photo:String(p.foto||'')
+  }));
+  if(!products.length){alert('No tienes productos registrados para generar el catálogo.');return null}
+  const business=String(db.config.name||'Catálogo de productos');
+  const logo=String(db.config.logo||'');
+  const phone=String(db.config.phone||'');
+  const instagram=String(db.config.instagram||'');
+  const facebook=String(db.config.facebook||'');
+  const email=String(db.config.email||'');
+  const address=String(db.config.address||'');
+  const city=String(db.config.city||'');
+  const generated=new Date().toLocaleString('es-CO');
+  const cards=products.map(p=>{
+    const img=/^data:image\/(png|jpe?g|webp|gif);base64,[A-Za-z0-9+/=]+$/i.test(p.photo)||/^https:\/\//i.test(p.photo)
+      ? '<img class="photo" src="'+escAttr(p.photo)+'" alt="'+escAttr(p.name)+'">'
+      : '<div class="photo no-photo">Sin foto</div>';
+    return '<article class="product"><div class="photo-wrap">'+img+'</div><div class="body"><h2>'+escAttr(p.name)+'</h2><div class="price">$'+p.price.toLocaleString('es-CO')+'</div><div class="unit">Precio de venta por unidad</div></div></article>';
+  }).join('');
+  const contact=[phone,instagram,facebook,email,address,city].filter(Boolean).map(escAttr).join(' · ');
+  return '<!doctype html><html lang="es"><head><meta charset="utf-8"><meta name="viewport" content="width=device-width,initial-scale=1"><meta name="description" content="Catálogo de productos de '+escAttr(business)+'"><title>'+escAttr(business)+' · Catálogo</title><style>*{box-sizing:border-box}body{margin:0;background:#f4f7fb;color:#172033;font-family:Arial,Helvetica,sans-serif}.wrap{max-width:1100px;margin:auto;padding:24px 16px 45px}.head{background:#fff;border:1px solid #e4e7ec;border-radius:20px;padding:22px;margin-bottom:18px;box-shadow:0 8px 28px rgba(16,24,40,.07)}.brand{display:flex;align-items:center;gap:16px}.logo{width:76px;height:76px;object-fit:contain;border-radius:12px}.head h1{margin:0 0 6px;font-size:30px}.sub{margin:0;color:#667085}.contact{margin:12px 0 0;color:#667085;font-size:13px;line-height:1.5}.grid{display:grid;grid-template-columns:repeat(auto-fill,minmax(220px,1fr));gap:16px}.product{background:#fff;border:1px solid #e4e7ec;border-radius:18px;overflow:hidden;box-shadow:0 8px 24px rgba(16,24,40,.07)}.photo-wrap{background:#eef2f6}.photo{display:block;width:100%;height:230px;object-fit:cover}.no-photo{display:flex;align-items:center;justify-content:center;color:#667085}.body{padding:16px}.body h2{font-size:19px;margin:0 0 8px}.price{font-size:24px;font-weight:800}.unit{margin-top:4px;color:#667085;font-size:12px}.foot{text-align:center;color:#98a2b3;font-size:12px;margin-top:22px}@media(max-width:520px){.wrap{padding:14px 11px 30px}.head h1{font-size:24px}.logo{width:62px;height:62px}.photo{height:200px}.grid{grid-template-columns:repeat(2,minmax(0,1fr));gap:10px}.body{padding:12px}.body h2{font-size:16px}.price{font-size:20px}}@media(max-width:360px){.grid{grid-template-columns:1fr}}</style></head><body><main class="wrap"><header class="head"><div class="brand">'+(logo?'<img class="logo" src="'+escAttr(logo)+'" alt="Logo">':'')+'<div><h1>'+escAttr(business)+'</h1><p class="sub">Catálogo de productos · Precio de venta por unidad</p></div></div>'+(contact?'<p class="contact">'+contact+'</p>':'')+'</header><section class="grid">'+cards+'</section><div class="foot">Catálogo generado el '+escAttr(generated)+'. Esta versión no muestra cantidades de stock.</div></main></body></html>';
+}
+let lastCatalogUrl='';
+function generateCatalogFile(){
+  const html=buildStandaloneCatalog(); if(!html)return;
+  if(lastCatalogUrl)URL.revokeObjectURL(lastCatalogUrl);
+  const blob=new Blob([html],{type:'text/html;charset=utf-8'});
+  lastCatalogUrl=URL.createObjectURL(blob);
+  const a=document.createElement('a');a.href=lastCatalogUrl;a.download=catalogFilename();document.body.appendChild(a);a.click();a.remove();
+  $('openGeneratedCatalog').disabled=false;$('downloadCatalogAgain').disabled=false;
+  $('catalogGenerateInfo').textContent='✓ Catálogo generado: '+a.download+' · '+new Date().toLocaleString('es-CO');
+}
+$('generateCatalogBtn').onclick=generateCatalogFile;
+$('downloadCatalogAgain').onclick=generateCatalogFile;
+$('openGeneratedCatalog').onclick=()=>{if(lastCatalogUrl)window.open(lastCatalogUrl,'_blank','noopener,noreferrer')};
 
 function renderInventory(){
  let q=normalizeSearch($('inventorySearch')?.value||'');
@@ -390,30 +454,33 @@ function renderInventory(){
 }
 $('inventorySearch').addEventListener('input',renderInventory);
 
-function loadConfig(){let c=db.config;document.title=c.name||'Control de Negocio';$('appName').textContent=c.name||'Control de Negocio';applyBusinessName();$('cfgName').value=c.name||'';$('cfgPhone').value=c.phone||'';$('cfgInstagram').value=c.instagram||'';$('cfgFacebook').value=c.facebook||'';$('cfgEmail').value=c.email||'';$('cfgAddress').value=c.address||'';$('cfgCity').value=c.city||'';$('cfgDriveUrl').value=c.driveScriptUrl||'';$('cfgDriveToken').value=c.driveToken||'';$('cfgCatalogBaseUrl').value=c.publicCatalogBaseUrl||'';if(c.logo){$('logoPreview').src=c.logo;$('headerLogo').src=c.logo;$('headerLogo').hidden=false}}
+function loadConfig(){let c=db.config;document.title=c.name||'Control de Negocio';$('appName').textContent=c.name||'Control de Negocio';applyBusinessName();$('cfgName').value=c.name||'';$('cfgPhone').value=c.phone||'';$('cfgInstagram').value=c.instagram||'';$('cfgFacebook').value=c.facebook||'';$('cfgEmail').value=c.email||'';$('cfgAddress').value=c.address||'';$('cfgCity').value=c.city||'';$('cfgDriveUrl').value=c.driveScriptUrl||'';$('cfgDriveToken').value=c.driveToken||'';if(c.logo){$('logoPreview').src=c.logo;$('headerLogo').src=c.logo;$('headerLogo').hidden=false}}
 $('cfgLogo').onchange=async()=>{let f=$('cfgLogo').files[0];if(!f)return;let r=new FileReader();r.onload=async()=>{db.config.logo=r.result;$('logoPreview').src=r.result;$('headerLogo').src=r.result;$('headerLogo').hidden=false;await autoSave()};r.readAsDataURL(f)}
 function applyBusinessName(){let n=(db.config.name||'Control de Negocio').trim()||'Control de Negocio';$('appName').textContent=n;document.title=n+' · Control de Negocio'}
-$('saveConfig').onclick=async()=>{db.config.name=$('cfgName').value.trim()||'Control de Negocio';db.config.phone=$('cfgPhone').value.trim();db.config.instagram=$('cfgInstagram').value.trim();db.config.facebook=$('cfgFacebook').value.trim();db.config.email=$('cfgEmail').value.trim();db.config.address=$('cfgAddress').value.trim();db.config.city=$('cfgCity').value.trim();db.config.driveScriptUrl=$('cfgDriveUrl').value.trim();db.config.driveToken=$('cfgDriveToken').value.trim();db.config.publicCatalogBaseUrl=$('cfgCatalogBaseUrl').value.trim();applyBusinessName();await autoSave();renderAll();alert('Identidad y contacto guardados correctamente.')}
+$('saveConfig').onclick=async()=>{db.config.name=$('cfgName').value.trim()||'Control de Negocio';db.config.phone=$('cfgPhone').value.trim();db.config.instagram=$('cfgInstagram').value.trim();db.config.facebook=$('cfgFacebook').value.trim();db.config.email=$('cfgEmail').value.trim();db.config.address=$('cfgAddress').value.trim();db.config.city=$('cfgCity').value.trim();db.config.driveScriptUrl=$('cfgDriveUrl').value.trim();db.config.driveToken=$('cfgDriveToken').value.trim();applyBusinessName();await autoSave();renderAll();alert('Identidad y contacto guardados correctamente.')}
 $('saveDriveConfig').onclick=async()=>{
+  const previous=driveUrl();
   db.config.driveScriptUrl=$('cfgDriveUrl').value.trim().replace(/\/$/,'');
   db.config.driveToken=$('cfgDriveToken').value.trim();
-  ensureDriveMeta();
-  await autoSave();
-  setDriveState(driveConfigured()?'configurado':'no configurado');
-  if(driveConfigured())await loadDriveRemote('manual');
-  alert(driveConfigured()?'Conexión con Google Drive guardada. Desde ahora este dispositivo comprobará Drive automáticamente al abrir el sistema.':'Conexión de Google Drive quitada.')
-}
-$('syncDriveNow').onclick=async()=>{
-  if(!driveConfigured()){alert('Primero configura la URL de Apps Script y el token secreto.');return}
-  await loadDriveRemote('manual')
-}
+  if(previous!==driveUrl())await clearSyncBase();
+  driveConflict=false;await persistBrowser();
+  if(!driveConfigured()){setDriveState('no configurado');return}
+  const ok=await syncDriveNow(true);
+  if(!ok)alert('Conexión guardada localmente. Revisa el estado de Drive: no se ha reemplazado ningún registro.');
+};
+$('syncDriveNow').onclick=async()=>{if(!driveConfigured()){alert('Configura primero URL y token de Apps Script.');return}driveConflict=false;await syncDriveNow(true)};
 $('restoreDriveNow').onclick=async()=>{
-  if(!driveConfigured()){alert('Primero configura la URL de Apps Script y el token secreto.');return}
-  if(confirm('Esto reemplazará los datos locales por la copia de Google Drive si la copia de Drive es más reciente. ¿Continuar?')){
-    const ok=await loadDriveRemote('manual');
-    alert(ok?'Proceso de sincronización/restauración completado.':'No hubo cambios que restaurar o no fue posible conectarse.')
-  }
-}
+  if(!driveConfigured()){alert('Configura primero URL y token de Apps Script.');return}
+  const raw=await (async()=>{try{return await readDrive()}catch(e){alert('No se pudo leer Drive: '+e.message);return null}})();if(!raw)return;
+  const remote=sharedState(raw),local=sharedState(db);
+  const detail=SYNC_COLLECTIONS.map(k=>`${k}: este equipo ${local[k].length} / Drive ${remote[k].length}`).join('\n');
+  if(identical(local,remote)){await storeSyncBase(remote,raw._meta.revision);driveConflict=false;setDriveState('sincronizado ✓');alert('PC y Drive ya contienen los mismos registros.');return}
+  const choice=confirm('COMPARACIÓN SIN BORRAR DATOS\n\n'+detail+'\n\nAceptar: descargar respaldo local y cargar la versión de Drive en este dispositivo.\nCancelar: conservar todo como está.\n\n¡Revisa primero cualquier registro guardado solo en este equipo!');
+  if(!choice){driveConflict=true;syncAlert('Se conservaron los datos locales. Drive no se ha modificado.');return}
+  backupCurrentData();adoptShared(remote,raw._meta||{});await storeSyncBase(remote,raw._meta.revision);driveConflict=false;await persistBrowser();renderAll();setDriveState('sincronizado ✓');
+};
+function backupCurrentData(){const backup=JSON.stringify(db,null,2);const url=URL.createObjectURL(new Blob([backup],{type:'application/json'}));const a=document.createElement('a');a.href=url;a.download='respaldo_local_antes_de_sincronizar_'+new Date().toISOString().replace(/[:.]/g,'-')+'.json';document.body.appendChild(a);a.click();a.remove();setTimeout(()=>URL.revokeObjectURL(url),10000)}
+$('backupBeforeResolve').onclick=backupCurrentData;
 
 function docRowHtml(r={qty:1,desc:'',unit:0}){return `<div class="doc-row"><input class="doc-qty" type="number" min="0" step="1" value="${r.qty}"><input class="doc-desc" placeholder="Descripción del servicio o producto" value="${esc(r.desc)}"><input class="doc-unit money-input" inputmode="numeric" placeholder="Valor unitario" value="${r.unit?new Intl.NumberFormat('es-CO').format(r.unit):''}"><input class="doc-line money-input" readonly placeholder="Valor total"><button class="btn danger remove-row" type="button">✕</button></div>`}
 function addDocRow(r){$('docRows').insertAdjacentHTML('beforeend',docRowHtml(r));let row=$('docRows').lastElementChild;row.querySelectorAll('.doc-qty,.doc-desc,.doc-unit').forEach(i=>i.addEventListener('input',()=>{if(i.classList.contains('doc-unit'))formatInput(i);calcDoc()}));row.querySelector('.remove-row').onclick=()=>{row.remove();calcDoc()};calcDoc()}
@@ -481,8 +548,7 @@ function currentDocumentForOutput(){
 function openPrintDocument(html,title){
  let w=window.open('','_blank','width=920,height=900,scrollbars=yes,resizable=yes');
  if(!w){alert('El navegador bloqueó la ventana de impresión. Permite las ventanas emergentes para este archivo y vuelve a intentarlo.');return false}
- w.document.open();w.document.write(`<!doctype html><html lang="es"><head><meta charset="utf-8"><title>${esc(title)}</title><style>@page{size:A4;margin:10mm}html,body{margin:0;padding:0;background:#fff}body{font-family:Arial,Helvetica,sans-serif;color:#172033;-webkit-print-color-adjust:exact;print-color-adjust:exact}.print-wrap{width:190mm;margin:0 auto}.invoice-paper{width:190mm;min-height:277mm;margin:0!important;padding:8mm!important;box-sizing:border-box;border:0!important;box-shadow:none!important;background:#fff!important}.invoice-head{display:flex;justify-content:space-between;gap:18px;border-bottom:2px solid #111;padding-bottom:12px}.invoice-logo{max-width:42mm;max-height:26mm;object-fit:contain}.invoice-table{width:100%;border-collapse:collapse;margin-top:18px}.invoice-table th,.invoice-table td{border:1px solid #bfc5cc;padding:7px;font-size:11pt}.invoice-table th{background:#f1f5f9}.invoice-total{text-align:right;margin-top:16px;font-size:15pt;font-weight:900}.invoice-head h2{margin:0 0 7px}.invoice-head div{font-size:10pt;line-height:1.45}tr{page-break-inside:avoid}.print-actions{display:flex;gap:10px;margin:0 0 18px}.print-actions button{padding:10px 16px;border:1px solid #ccd3dc;border-radius:8px;background:#f3f5f7;font-weight:700;cursor:pointer}@media print{.print-actions{display:none!important}.print-wrap{width:auto}.invoice-paper{width:auto;min-height:auto;padding:0!important}}</style></head><body><div class="print-actions"><button onclick="window.print()">🖨️ Imprimir / Guardar PDF</button><button onclick="window.close()">✕ Cerrar</button></div><div class="print-wrap">${html}</div>
-</body></html>`);w.document.close();w.focus();setTimeout(()=>{try{w.print()}catch(e){}},350);return true;
+ w.document.open();w.document.write(`<!doctype html><html lang="es"><head><meta charset="utf-8"><title>${esc(title)}</title><style>@page{size:A4;margin:10mm}html,body{margin:0;padding:0;background:#fff}body{font-family:Arial,Helvetica,sans-serif;color:#172033;-webkit-print-color-adjust:exact;print-color-adjust:exact}.print-wrap{width:190mm;margin:0 auto}.invoice-paper{width:190mm;min-height:277mm;margin:0!important;padding:8mm!important;box-sizing:border-box;border:0!important;box-shadow:none!important;background:#fff!important}.invoice-head{display:flex;justify-content:space-between;gap:18px;border-bottom:2px solid #111;padding-bottom:12px}.invoice-logo{max-width:42mm;max-height:26mm;object-fit:contain}.invoice-table{width:100%;border-collapse:collapse;margin-top:18px}.invoice-table th,.invoice-table td{border:1px solid #bfc5cc;padding:7px;font-size:11pt}.invoice-table th{background:#f1f5f9}.invoice-total{text-align:right;margin-top:16px;font-size:15pt;font-weight:900}.invoice-head h2{margin:0 0 7px}.invoice-head div{font-size:10pt;line-height:1.45}tr{page-break-inside:avoid}.print-actions{display:flex;gap:10px;margin:0 0 18px}.print-actions button{padding:10px 16px;border:1px solid #ccd3dc;border-radius:8px;background:#f3f5f7;font-weight:700;cursor:pointer}@media print{.print-actions{display:none!important}.print-wrap{width:auto}.invoice-paper{width:auto;min-height:auto;padding:0!important}}</style></head><body><div class="print-actions"><button onclick="window.print()">🖨️ Imprimir / Guardar PDF</button><button onclick="window.close()">✕ Cerrar</button></div><div class="print-wrap">${html}</div></body></html>`);w.document.close();w.focus();setTimeout(()=>{try{w.print()}catch(e){}},350);return true;
 }
 function printSavedDoc(id){
  let x=id?db.documentos.find(a=>a.id===id):currentDocumentForOutput();
@@ -537,9 +603,10 @@ $('notaCancel').onclick=()=>{resetNota();renderNotas()}
 $('notesSearch').addEventListener('input',renderNotas)
 $('notaTipo').addEventListener('change',updateReminderFields);$('notaRecordatorio').addEventListener('change',updateReminderFields);$('reminderFrequency').addEventListener('change',updateReminderFields);
 function renderAll(){loadConfig();populateInvSelect();renderToday();renderMovements();renderInventory();renderNotas();renderDocs();renderReminderArea()}
-setInterval(renderReminderArea,30000);window.addEventListener('online',()=>{if(driveConfigured())saveDriveNow(false)});setInterval(()=>{if(driveConfigured()&&!driveSyncBusy&&Number(db._meta?.updatedAt)>0)saveDriveNow(false)},60000);document.addEventListener('visibilitychange',()=>{if(!document.hidden){renderReminderArea();if(driveConfigured())saveDriveNow(false)}});
+setInterval(renderReminderArea,30000);window.addEventListener('online',()=>{if(driveConfigured()&&!driveConflict)syncDriveNow(false)});setInterval(()=>{if(driveConfigured()&&!driveSyncBusy&&!driveConflict)syncDriveNow(false)},45000);document.addEventListener('visibilitychange',()=>{if(!document.hidden){renderReminderArea();if(driveConfigured()&&!driveConflict)syncDriveNow(false)}});
 async function load(){
   await loadBrowser();
+  await loadSyncBase();
   setupDocumentWorkspace();
   $('ventaFecha').value=today();
   $('gastoFecha').value=today();
@@ -550,16 +617,12 @@ async function load(){
   renderAll();
   if(driveConfigured()){
     await loadDriveRemote('startup');
-    driveStartupChecked=true;
+
   }
   renderReminderArea()
 }
 load();
-</script>
-<script>
-if ('serviceWorker' in navigator && (location.protocol === 'http:' || location.protocol === 'https:')) {
-  window.addEventListener('load', () => navigator.serviceWorker.register('./sw.js').catch(()=>{}));
-}
+if('serviceWorker' in navigator && location.protocol.startsWith('http'))navigator.serviceWorker.register('./sw.js').catch(()=>{});
 </script>
 </body>
 </html>
