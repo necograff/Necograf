@@ -1,0 +1,27 @@
+<!doctype html>
+<html lang="es"><head><meta charset="utf-8"><meta name="viewport" content="width=device-width,initial-scale=1"><title>Diagnóstico de conexión · NECOGRAF</title><style>
+:root{font-family:system-ui,-apple-system,Segoe UI,sans-serif;color:#152035;background:#f5f7fb}*{box-sizing:border-box}body{margin:0;padding:18px}.wrap{max-width:720px;margin:auto}.card{padding:22px;background:white;border:1px solid #dfe5ec;border-radius:16px;margin-bottom:14px}h1{font-size:25px;margin:0 0 10px}h2{font-size:18px;margin:0 0 10px}p{line-height:1.55;color:#526073}.help{font-size:13px}label{display:block;font-weight:700;margin-bottom:6px}input{width:100%;min-height:48px;border-radius:10px;border:1px solid #aebdce;padding:10px;font:inherit;font-size:16px}button,.link{display:inline-block;background:#195bed;color:white;border:0;border-radius:10px;padding:13px 17px;min-height:45px;font-size:16px;font-weight:700;cursor:pointer;text-decoration:none;margin-top:12px}button:disabled{opacity:.6;cursor:not-allowed}.out{border-radius:9px;background:#edf2f7;padding:12px;min-height:64px;font-family:system-ui;white-space:pre-wrap;overflow-wrap:anywhere}.ok{background:#e8f6ed;color:#195732}.err{background:#fff0ec;color:#8c2c18}.wait{background:#fff8e6;color:#74530e}
+</style></head><body><main class="wrap"><div class="card"><h1>Diagnóstico Android · NECOGRAF</h1><p>Esta página verifica si Chrome Android permite ejecutar la respuesta de Apps Script <strong>dentro de una página de GitHub Pages</strong>. No modifica ventas, inventario, archivos ni la configuración.</p><label for="url">URL pública de Apps Script (termina en /exec)</label><input id="url" type="url" inputmode="url" autocomplete="off" spellcheck="false" placeholder="https://script.google.com/macros/s/AKfycb.../exec"><p class="help"><strong>No escribas el token secreto aquí.</strong> La prueba usa una consulta sin token y espera «No autorizado» como resultado correcto.</p><button id="run" type="button">Comprobar desde este navegador</button></div><div class="card"><h2>Resultado de la carga de script</h2><div class="out" id="status" aria-live="polite">Todavía no se ha ejecutado la prueba.</div><p class="help">Si indica que Android bloqueó el script, prueba en modo incógnito o desactiva temporalmente el DNS privado / bloqueador de anuncios y vuelve a probar. Si indica éxito pero el negocio sigue pendiente, hay que revisar la consulta autenticada y el token dentro del propio sistema.</p><a id="direct" class="link" target="_blank" rel="noopener noreferrer" style="display:none">Abrir respuesta directamente</a></div><p class="help">Herramienta de diagnóstico sin almacenamiento ni subida de datos. Solo crea una solicitud de lectura a la URL de Google Apps Script que tú indiques.</p></main>
+<script>
+'use strict';
+const $=id=>document.getElementById(id);
+let timer=null,script=null,callbackName='';
+function show(message,type=''){$('status').textContent=message;$('status').className='out '+type}
+function cleanup(){if(timer)clearTimeout(timer);timer=null;if(script){script.remove();script=null}if(callbackName){try{delete window[callbackName]}catch(e){}callbackName=''}}
+$('run').addEventListener('click',()=>{
+ cleanup();let u;
+ try{u=new URL($('url').value.trim());if(u.protocol!=='https:'||u.hostname!=='script.google.com'||!/^\/macros\/(?:u\/\d+\/)?s\/[^/]+\/exec\/?$/.test(u.pathname))throw Error('URL no reconocida');u.pathname=u.pathname.replace(/^\/macros\/u\/\d+\//,'/macros/');u.search='';u.hash='';}
+ catch(e){show('Escribe la URL correcta de la aplicación web de Apps Script, que comienza con https://script.google.com/macros/s/ y termina en /exec.','err');return}
+ const direct=new URL(u);direct.searchParams.set('action','status');$('direct').href=direct.href;$('direct').style.display='inline-block';
+ callbackName='necoDiag_'+Date.now();
+ const request=new URL(u);request.searchParams.set('action','status');request.searchParams.set('prefix',callbackName);
+ let completed=false;
+ function finish(msg,type){if(completed)return;completed=true;cleanup();$('run').disabled=false;show(msg,type)}
+ window[callbackName]=result=>{if(result&&result.ok===false&&result.error==='No autorizado')finish('✅ CORRECTO: el navegador ejecutó el script remoto y recibió «No autorizado». La conexión pública JSONP funciona en este navegador.','ok');else finish('✅ El script remoto se ejecutó, pero respondió algo inesperado: '+JSON.stringify(result).slice(0,300),'wait')};
+ script=document.createElement('script');script.async=true;
+ script.onerror=()=>finish('❌ El navegador no pudo cargar el script remoto. Abrir Apps Script en una pestaña puede funcionar aunque cargarlo como script externo falle. Revisa bloqueo de scripts, DNS privado, VPN o restricciones de red.','err');
+ script.onload=()=>{setTimeout(()=>{if(!completed)finish('⚠️ Se descargó el recurso, pero no se ejecutó la función de respuesta. Es posible que Google haya entregado HTML/JSON en vez de JavaScript, o que el navegador rechazara su ejecución.','wait')},250)};
+ timer=setTimeout(()=>finish('⏱️ Tiempo de espera: Android no completó la solicitud al script remoto (25 segundos).','err'),25000);
+ $('run').disabled=true;show('Consultando Apps Script como JavaScript externo…','wait');script.src=request.href;document.head.appendChild(script);
+});
+</script></body></html>
